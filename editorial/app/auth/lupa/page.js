@@ -1,0 +1,27 @@
+import { redirect } from "next/navigation";
+import AuthCard from "@/components/AuthCard";
+import AuthShell from "@/components/AuthShell";
+import { getSafeRedirect } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/supabase/server";
+
+export default async function ForgotPage({ searchParams }) {
+  const params = await searchParams;
+  const next = getSafeRedirect(params?.next || "/beranda");
+  const { user } = await getCurrentUser();
+
+  if (user) {
+    redirect(next);
+  }
+
+  return (
+    <AuthShell>
+      <AuthCard
+        mode="forgot-password"
+        next={next}
+        error={params?.error}
+        message={params?.message}
+        identifier={params?.identifier || params?.email || ""}
+      />
+    </AuthShell>
+  );
+}

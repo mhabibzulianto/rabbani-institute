@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bubble Auth Reconstruction</title>
+  <style>
+    :root {
+      --bg: #eef3f7;
+      --surface: #ffffff;
+      --surface-soft: #f7f9fb;
+      --text: #0f1720;
+      --muted: #667788;
+      --line: #d9e2ea;
+      --primary: #003b5d;
+      --primary-strong: #072b42;
+      --shadow: 0 22px 50px rgba(5, 43, 68, 0.08);
+      --radius-xl: 28px;
+      --radius-lg: 18px;
+      --radius-md: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(0, 59, 93, 0.12), transparent 24%),
+        radial-gradient(circle at bottom right, rgba(255, 212, 72, 0.14), transparent 28%),
+        linear-gradient(180deg, #f8fbfd 0%, var(--bg) 100%);
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    .page {
+      width: min(1180px, calc(100% - 40px));
+      min-height: 100vh;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      padding: 28px 0 22px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 30px;
+    }
+
+    .brand img {
+      width: 30px;
+      height: 30px;
+      display: block;
+    }
+
+    .brand span {
+      font-size: 16px;
+      font-weight: 700;
+      color: #0c496f;
+    }
+
+    .main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(380px, 430px);
+      align-items: center;
+      gap: 34px;
+    }
+
+    .content {
+      display: grid;
+      gap: 18px;
+      max-width: 560px;
+    }
+
+    .content h1 {
+      margin: 0;
+      font-size: clamp(2.8rem, 5vw, 4.8rem);
+      line-height: 0.98;
+      letter-spacing: -0.03em;
+      max-width: 10ch;
+    }
+
+    .content p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.8;
+      max-width: 35rem;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 8px;
+      font-weight: 600;
+      color: #304352;
+    }
+
+    .back-icon {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid var(--line);
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+      padding: 22px 22px 18px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .tab {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      padding: 0 0 12px;
+      text-align: center;
+      font-weight: 600;
+      color: var(--muted);
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+    }
+
+    .tab.active {
+      color: var(--text);
+      border-color: var(--primary);
+    }
+
+    .panel {
+      display: none;
+      gap: 18px;
+    }
+
+    .panel.active {
+      display: grid;
+    }
+
+    .heading {
+      display: grid;
+      gap: 8px;
+    }
+
+    .heading h2 {
+      margin: 0;
+      font-size: 1.8rem;
+      line-height: 1.1;
+    }
+
+    .heading p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .field-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+    }
+
+    .field label,
+    .step-label {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .input,
+    .select,
+    .step-option {
+      min-height: 48px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+    }
+
+    .input,
+    .select {
+      padding: 0 14px;
+      color: #3d3d3d;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .checkbox {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #304352;
+      font-size: 14px;
+    }
+
+    .button {
+      appearance: none;
+      border: 0;
+      min-height: 48px;
+      border-radius: 10px;
+      padding: 0 16px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .button.primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .button.secondary {
+      background: var(--surface-soft);
+      color: var(--primary);
+      border: 1px solid var(--line);
+    }
+
+    .divider {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: "";
+      height: 1px;
+      background: #dedede;
+    }
+
+    .social {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-height: 48px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      font-weight: 600;
+    }
+
+    .social img {
+      width: 20px;
+      height: 20px;
+    }
+
+    .legal {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .footer {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .register-steps {
+      display: grid;
+      gap: 16px;
+    }
+
+    .step-indicator {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 34px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: #fff;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .pill.active {
+      border-color: var(--primary);
+      background: rgba(0, 59, 93, 0.08);
+      color: var(--primary);
+    }
+
+    .step {
+      display: none;
+      gap: 14px;
+    }
+
+    .step.active {
+      display: grid;
+    }
+
+    .step-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .step-option {
+      display: grid;
+      place-items: center;
+      padding: 14px;
+      font-weight: 600;
+      color: #3d3d3d;
+      cursor: pointer;
+    }
+
+    .step-option.active {
+      border-color: var(--primary);
+      background: rgba(0, 59, 93, 0.08);
+      color: var(--primary);
+    }
+
+    .success-box {
+      display: grid;
+      gap: 10px;
+      padding: 18px;
+      border: 1px solid #cfe6d8;
+      border-radius: 16px;
+      background: #f4fbf6;
+    }
+
+    .success-box strong {
+      font-size: 1.05rem;
+      color: #0f5132;
+    }
+
+    .success-box p {
+      margin: 0;
+      color: #2b6144;
+      line-height: 1.65;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 980px) {
+      .page {
+        width: min(100% - 28px, 1180px);
+      }
+
+      .main {
+        grid-template-columns: 1fr;
+      }
+
+      .content h1 {
+        max-width: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="brand">
+      <img src="./assets/logo.jpg" alt="Rabbani Institute" />
+      <span>rabbani-institute</span>
+    </div>
+
+    <div class="main">
+      <div class="content">
+        <h1>Mudah mengelola studi dan perangkat belajarmu.</h1>
+        <p>Satu akun untuk semua kelas, ujian, dan portofolio belajarmu di rabbani-institute.</p>
+        <a class="back-link" href="#">
+          <span class="back-icon">←</span>
+          <span>Ke Halaman Utama</span>
+        </a>
+      </div>
+
+      <div class="card">
+        <div class="tabs">
+          <button class="tab active" data-tab="login">Masuk</button>
+          <button class="tab" data-tab="register">Daftar</button>
+        </div>
+
+        <section class="panel active" data-panel="login">
+          <div class="heading">
+            <h2>Selamat datang kembali</h2>
+            <p>Masuk dengan email atau nomor WhatsApp</p>
+          </div>
+
+          <div class="field-grid">
+            <div class="field">
+              <label>Email atau Nomor WhatsApp</label>
+              <input class="input" type="text" placeholder="user@email.com" />
+            </div>
+            <div class="field">
+              <label>Password</label>
+              <input class="input" type="password" placeholder="Masukkan password" />
+            </div>
+            <div class="row">
+              <label class="checkbox">
+                <input type="checkbox" />
+                <span>Ingat saya</span>
+              </label>
+              <a href="#">Lupa password</a>
+            </div>
+            <button class="button primary">Masuk</button>
+          </div>
+
+          <div class="divider">atau masuk dengan</div>
+          <button class="social">
+            <img src="./assets/google.svg" alt="Google" />
+            <span>Google</span>
+          </button>
+        </section>
+
+        <section class="panel" data-panel="register">
+          <div class="register-steps">
+            <div class="step-indicator">
+              <span class="pill active" data-pill="0">Step 0</span>
+              <span class="pill" data-pill="1">Step 1</span>
+              <span class="pill" data-pill="2">Step 2</span>
+              <span class="pill" data-pill="3">Step 3</span>
+            </div>
+
+            <div class="step active" data-step="0">
+              <div class="heading">
+                <h2>Buat akun baru</h2>
+                <p>Pilih dulu metode pendaftaran sebelum masuk ke form lanjutan.</p>
+              </div>
+              <div>
+                <div class="step-label">Daftar pakai</div>
+                <div class="step-options" style="margin-top: 10px;">
+                  <button class="step-option active" data-method="email">Email</button>
+                  <button class="step-option" data-method="wa">WhatsApp</button>
+                </div>
+              </div>
+              <div class="actions">
+                <button class="button primary" data-next-step="1">Lanjut</button>
+              </div>
+            </div>
+
+            <div class="step" data-step="1">
+              <div class="heading">
+                <h2>Informasi login</h2>
+                <p id="step-1-copy">Masukkan alamat email dan password akun.</p>
+              </div>
+              <div class="field-grid">
+                <div class="field">
+                  <label id="credential-label">Alamat email</label>
+                  <input class="input" id="credential-input" type="text" placeholder="user@email.com" />
+                </div>
+                <div class="field">
+                  <label>Password</label>
+                  <input class="input" type="password" placeholder="Buat password" />
+                </div>
+              </div>
+              <div class="actions">
+                <button class="button secondary" data-prev-step="0">Kembali</button>
+                <button class="button primary" data-next-step="2">Lanjut</button>
+              </div>
+            </div>
+
+            <div class="step" data-step="2">
+              <div class="heading">
+                <h2>Lengkapi profil dasar</h2>
+                <p>Step ini sesuai pola yang Anda jelaskan: nama, tahun lahir, dan jenis kelamin.</p>
+              </div>
+              <div class="field-grid">
+                <div class="field">
+                  <label>Nama lengkap</label>
+                  <input class="input" type="text" placeholder="Nama lengkap" />
+                </div>
+                <div class="field">
+                  <label>Tahun lahir</label>
+                  <input class="input" type="number" placeholder="2005" />
+                </div>
+                <div class="field">
+                  <label>Jenis kelamin</label>
+                  <select class="select">
+                    <option>Pilih jenis kelamin</option>
+                    <option>Laki-laki</option>
+                    <option>Perempuan</option>
+                  </select>
+                </div>
+              </div>
+              <div class="actions">
+                <button class="button secondary" data-prev-step="1">Kembali</button>
+                <button class="button primary" data-next-step="3">Selesaikan</button>
+              </div>
+            </div>
+
+            <div class="step" data-step="3">
+              <div class="success-box">
+                <strong>Pendaftaran berhasil</strong>
+                <p>Akun sudah dibuat. Di Bubble ini saya rekonstruksi sebagai state sukses tanpa reload halaman, sesuai flow step yang Anda jelaskan.</p>
+              </div>
+              <div class="actions">
+                <button class="button secondary" data-prev-step="2">Kembali</button>
+                <button class="button primary" data-back-login>Ke Masuk</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="legal">
+          Dengan melanjutkan, kamu menyatakan setuju dengan Kebijakan Privasi dan Ketentuan Penggunaan kami.
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">Hak cipta 2026 rabbani-institute.</div>
+  </div>
+
+  <script>
+    const tabs = document.querySelectorAll("[data-tab]");
+    const panels = document.querySelectorAll("[data-panel]");
+    const pills = document.querySelectorAll("[data-pill]");
+    const steps = document.querySelectorAll("[data-step]");
+    const methodButtons = document.querySelectorAll("[data-method]");
+    const nextButtons = document.querySelectorAll("[data-next-step]");
+    const prevButtons = document.querySelectorAll("[data-prev-step]");
+    const backLoginButton = document.querySelector("[data-back-login]");
+    const credentialLabel = document.getElementById("credential-label");
+    const credentialInput = document.getElementById("credential-input");
+    const stepOneCopy = document.getElementById("step-1-copy");
+
+    let currentTab = "login";
+    let currentStep = 0;
+    let registerMethod = "email";
+
+    function renderTabs() {
+      tabs.forEach((tab) => {
+        tab.classList.toggle("active", tab.dataset.tab === currentTab);
+      });
+      panels.forEach((panel) => {
+        panel.classList.toggle("active", panel.dataset.panel === currentTab);
+      });
+    }
+
+    function renderSteps() {
+      pills.forEach((pill) => {
+        pill.classList.toggle("active", Number(pill.dataset.pill) === currentStep);
+      });
+      steps.forEach((step) => {
+        step.classList.toggle("active", Number(step.dataset.step) === currentStep);
+      });
+
+      methodButtons.forEach((button) => {
+        button.classList.toggle("active", button.dataset.method === registerMethod);
+      });
+
+      if (registerMethod === "wa") {
+        credentialLabel.textContent = "Nomor WhatsApp";
+        credentialInput.placeholder = "0812xxxxxxx";
+        stepOneCopy.textContent = "Masukkan nomor WhatsApp dan password akun.";
+      } else {
+        credentialLabel.textContent = "Alamat email";
+        credentialInput.placeholder = "user@email.com";
+        stepOneCopy.textContent = "Masukkan alamat email dan password akun.";
+      }
+    }
+
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        currentTab = tab.dataset.tab;
+        if (currentTab === "register") {
+          currentStep = 0;
+        }
+        renderTabs();
+        renderSteps();
+      });
+    });
+
+    methodButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        registerMethod = button.dataset.method;
+        renderSteps();
+      });
+    });
+
+    nextButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        currentStep = Number(button.dataset.nextStep);
+        renderSteps();
+      });
+    });
+
+    prevButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        currentStep = Number(button.dataset.prevStep);
+        renderSteps();
+      });
+    });
+
+    backLoginButton?.addEventListener("click", () => {
+      currentTab = "login";
+      currentStep = 0;
+      renderTabs();
+      renderSteps();
+    });
+
+    renderTabs();
+    renderSteps();
+  </script>
+</body>
+</html>
