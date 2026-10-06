@@ -24,7 +24,7 @@ export default async function KuisHariIniPage() {
                   <strong>{item.quiz?.title_id || "Kuis"}</strong>
                   <p>{item.quiz?.course?.title_id || "Course"}</p>
                 </div>
-                <span>{new Date(item.created_at).toLocaleString("id-ID")}</span>
+                <span>{new Date(item.created_at).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })}</span>
               </div>
             ))}
           </div>

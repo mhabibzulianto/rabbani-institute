@@ -1,0 +1,3 @@
+export default function PreviewLoading() {
+  return <main className="article-preview-page" aria-busy="true" aria-label="Memuat preview artikel"><div className="article-skeleton article-skeleton-heading" /><div className="article-preview-layout"><div className="article-preview-metadata"><div className="article-skeleton article-skeleton-row" /><div className="article-skeleton article-skeleton-row" /></div><div className="article-preview-paper article-loading-panel"><div className="article-skeleton article-skeleton-heading" /><div className="article-skeleton article-skeleton-row" /><div className="article-skeleton article-skeleton-row" /></div></div><span className="visually-hidden" role="status">Memuat preview artikel…</span></main>;
+}

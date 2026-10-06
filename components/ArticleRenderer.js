@@ -54,6 +54,8 @@ function PlateNodeRenderer({ footnoteIds, footnotes, node }) {
   ));
 
   switch (node.type) {
+    case "hr":
+      return <hr />;
     case "h1":
       return <h2>{children}</h2>;
     case "h2":
@@ -69,7 +71,7 @@ function PlateNodeRenderer({ footnoteIds, footnotes, node }) {
     case "ul":
       return <ul style={{ listStyleType: node.listStyleType || "disc" }}>{children}</ul>;
     case "ol":
-      return <ol style={{ listStyleType: node.listStyleType || "decimal" }}>{children}</ol>;
+      return <ol start={node.start || 1} style={{ listStyleType: node.listStyleType || "decimal" }}>{children}</ol>;
     case "li":
       return <li>{children}</li>;
     case "columns-2":
@@ -94,29 +96,30 @@ function PlateNodeRenderer({ footnoteIds, footnotes, node }) {
         <figure className="article-image-block">
           <div className="article-image-shell">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img alt={node.alt || node.filename || "Image"} src={node.src} />
+            <img alt={node.alt || ""} src={node.src} />
           </div>
-          {node.filename ? <figcaption>{node.filename}</figcaption> : null}
+          {node.caption || node.filename ? <figcaption>{node.caption || node.filename}</figcaption> : null}
         </figure>
       );
     case "video":
       return (
         <figure className="article-media-block">
           <video controls src={node.src} />
-          {node.filename ? <figcaption>{node.filename}</figcaption> : null}
+          {node.caption || node.filename ? <figcaption>{node.caption || node.filename}</figcaption> : null}
         </figure>
       );
     case "audio":
       return (
         <figure className="article-media-block">
           <audio controls src={node.src} />
-          {node.filename ? <figcaption>{node.filename}</figcaption> : null}
+          {node.caption || node.filename ? <figcaption>{node.caption || node.filename}</figcaption> : null}
         </figure>
       );
     case "document":
       return (
         <div className="article-document-block">
           <strong>{node.filename || "Dokumen artikel"}</strong>
+          {node.caption ? <p>{node.caption}</p> : null}
           <a href={node.src} rel="noreferrer" target="_blank">
             Buka dokumen
           </a>

@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { buildCallbackUrl, getSafeRedirect } from "@/lib/auth";
 import { createSupabaseServerClient, getCurrentUser } from "@/lib/supabase/server";
+import { requireEditorialUser } from "@/lib/editorial";
+import { canAccessEditorial } from "@/lib/access.mjs";
 
 function textValue(formData, key) {
   const value = formData.get(key)?.toString().trim();
@@ -32,7 +34,10 @@ export async function signIn(formData) {
     redirect(`/auth?error=${encodeURIComponent(error.message)}&next=${encodeURIComponent(next)}&identifier=${encodeURIComponent(identifier)}`);
   }
 
+  const { profile } = await getCurrentUser();
   revalidatePath("/", "layout");
+  if (!canAccessEditorial(profile)) redirect("/akses-ditolak");
+
   redirect(next);
 }
 
@@ -111,11 +116,7 @@ export async function updatePassword(formData) {
 }
 
 export async function updateOfficialProfile(formData) {
-  const { user, profile } = await getCurrentUser();
-
-  if (!user) {
-    redirect(`/auth?next=${encodeURIComponent(getSafeRedirect("/administrasi-umum"))}`);
-  }
+  const { user, profile } = await requireEditorialUser();
 
   const supabase = await createSupabaseServerClient();
   const certificateName = textValue(formData, "certificate_name");
@@ -156,11 +157,7 @@ export async function updateOfficialProfile(formData) {
 }
 
 export async function submitIssueReport(formData) {
-  const { user } = await getCurrentUser();
-
-  if (!user) {
-    redirect(`/auth?next=${encodeURIComponent(getSafeRedirect("/laporkan-masalah"))}`);
-  }
+  const { user } = await requireEditorialUser();
 
   const supabase = await createSupabaseServerClient();
   const payload = {

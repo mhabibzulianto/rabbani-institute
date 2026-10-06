@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSafeRedirect, getSiteUrl } from "@/lib/auth";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient, getCurrentUser } from "@/lib/supabase/server";
+import { canAccessEditorial } from "@/lib/access.mjs";
 
 export async function GET(request) {
   const requestUrl = new URL(request.url);
@@ -9,7 +10,16 @@ export async function GET(request) {
 
   if (code) {
     const supabase = await createSupabaseServerClient();
-    await supabase.auth.exchangeCodeForSession(code);
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error) {
+      return NextResponse.redirect(new URL("/auth?error=Tautan%20masuk%20tidak%20valid%20atau%20sudah%20kedaluwarsa.", getSiteUrl()));
+    }
+  }
+
+  const { user, profile } = await getCurrentUser();
+  if (!user) return NextResponse.redirect(new URL("/auth", getSiteUrl()));
+  if (!canAccessEditorial(profile)) {
+    return NextResponse.redirect(new URL("/akses-ditolak", getSiteUrl()));
   }
 
   return NextResponse.redirect(new URL(next, getSiteUrl()));

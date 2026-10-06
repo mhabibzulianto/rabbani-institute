@@ -1,14 +1,8 @@
-import { redirect } from "next/navigation";
 import AppShell from "@/components/AppShell";
-import { touchEditorialMembership } from "@/lib/editorial";
-import { getCurrentUser } from "@/lib/supabase/server";
+import { requireEditorialUser, touchEditorialMembership } from "@/lib/editorial";
 
 export default async function DashboardLayout({ children }) {
-  const { user, profile } = await getCurrentUser();
-
-  if (!user) {
-    redirect("/auth?next=/beranda");
-  }
+  const { user, profile } = await requireEditorialUser();
 
   await touchEditorialMembership(user.id);
 

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import MobileNavigation from "./MobileNavigation";
 import {
   BarChart3,
   ChevronDown,
@@ -55,26 +56,27 @@ function getInitials(name) {
 export default function AppShell({ children, profile }) {
   const pathname = usePathname();
   const displayName = profile?.full_name || "Pengguna Rabbani";
+  const isArticlePreview = /^\/artikel\/\d+$/.test(pathname);
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell${isArticlePreview ? " app-shell-with-preview" : ""}`}>
       <aside className="sidebar">
         <div className="brand-card">
           <div className="brand-mark editorial-mark">E</div>
-          <div>
+          <div className="brand-text">
             <p className="brand-title">Editorial</p>
             <p className="brand-subtitle">Rabbani Institute</p>
           </div>
         </div>
 
         <nav className="sidebar-section">
-          <p className="sidebar-label">Grup 1</p>
           <div className="sidebar-list">
             {primaryItems.map((item) => (
               <Link
                 key={item.href}
                 className={`sidebar-link ${isActive(pathname, item.href) ? "is-active" : ""}`}
                 href={item.href}
+                aria-current={isActive(pathname, item.href) ? "page" : undefined}
               >
                 <item.icon size={16} />
                 <span>{item.label}</span>
@@ -94,6 +96,7 @@ export default function AppShell({ children, profile }) {
                 key={item.href}
                 className={`sidebar-link ${isActive(pathname, item.href) ? "is-active" : ""}`}
                 href={item.href}
+                aria-current={isActive(pathname, item.href) ? "page" : undefined}
               >
                 <item.icon size={16} />
                 <span>{item.label}</span>
@@ -113,6 +116,7 @@ export default function AppShell({ children, profile }) {
                 key={item.href}
                 className={`sidebar-link ${isActive(pathname, item.href) ? "is-active" : ""}`}
                 href={item.href}
+                aria-current={isActive(pathname, item.href) ? "page" : undefined}
               >
                 <item.icon size={16} />
                 <span>{item.label}</span>
@@ -136,6 +140,7 @@ export default function AppShell({ children, profile }) {
                 key={item.href}
                 className={`sidebar-link ${isActive(pathname, item.href) ? "is-active" : ""}`}
                 href={item.href}
+                aria-current={isActive(pathname, item.href) ? "page" : undefined}
               >
                 <item.icon size={16} />
                 <span>{item.label}</span>
@@ -150,6 +155,7 @@ export default function AppShell({ children, profile }) {
       </aside>
 
       <div className="content-shell">{children}</div>
+      <MobileNavigation displayName={displayName} initials={getInitials(displayName)} remainingItems={[primaryItems[2], ...settingItems, ...profileItems, { href: "/auth/logout", label: "Logout", icon: LogOut }]} />
     </div>
   );
 }

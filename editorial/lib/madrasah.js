@@ -21,6 +21,7 @@ export function formatIdr(value) {
 export function formatDate(value) {
   if (!value) return "-";
   return new Intl.DateTimeFormat("id-ID", {
+    timeZone: "Asia/Jakarta",
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -30,6 +31,7 @@ export function formatDate(value) {
 export function formatDateTime(value) {
   if (!value) return "-";
   return new Intl.DateTimeFormat("id-ID", {
+    timeZone: "Asia/Jakarta",
     day: "2-digit",
     month: "short",
     year: "numeric",
