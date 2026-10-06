@@ -3,5 +3,5 @@ packages:
 
 # The native resolver is unused by this JavaScript-only app. Keep installation
 # deterministic without executing its optional postinstall script.
-ignoredBuiltDependencies:
-  - unrs-resolver
+allowBuilds:
+  unrs-resolver: false
