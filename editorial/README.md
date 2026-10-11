@@ -297,3 +297,81 @@ Pengujian mencakup izin pemulihan, CAS, revisi milik artikel lain, snapshot sebe
 dan setelah pemulihan, serta restore canonical/legacy. Stress test mengedit dan
 mengekspor dokumen 1.200 blok/300 heading dengan teks Arab. Pengujian SQL memakai
 PGlite sementara; tidak mengubah database Supabase live.
+# Landing page editor — fase 1
+
+Menu **Halaman utama** hanya terlihat untuk admin, termasuk menu mobile.
+Halaman dan server action memeriksa role admin; editor visual fase 2 tersedia.
+Dokumen default dan schema sembilan jenis blok berada di package bersama
+`../packages/landing-page`. Situs utama belum beralih ke renderer baru.
+
+Jalankan `../supabase/landing_page_editor_patch.sql` melalui SQL Editor Supabase
+yang sama dengan aplikasi ini. Patch memerlukan tabel `profiles` dan Auth yang
+sudah ada, aman dijalankan ulang, serta membuat draft awal tanpa menerbitkannya.
+Jika tabel belum tersedia, halaman admin menampilkan dokumen default dan arahan
+patch. Error database lain tetap dilaporkan sebagai error, bukan fallback diam-diam.
+
+Tabel private: `landing_pages` dan `landing_page_revisions`. Tabel public read-only:
+`landing_page_publications`, hanya berisi snapshot terbit. Penyimpanan draft melalui
+RPC `save_landing_draft` memakai expected version. RPC publikasi sudah disiapkan
+dan dilindungi admin; UI publikasi dan revalidasi lintas aplikasi mengikuti fase 4.
+
+Rencana selanjutnya: [LANDING_PAGE_EDITOR_PLAN.md](LANDING_PAGE_EDITOR_PLAN.md).
+
+## Landing page editor — fase 2
+
+Buka `/halaman-utama`, lalu **Buka editor** untuk menuju halaman khusus
+`/halaman-utama/edit`. Desktop memakai daftar blok, kanvas, dan inspector;
+mobile memakai tab panel. Blok dapat ditambah, digeser/naik-turun, diduplikat,
+disembunyikan, dan dihapus. Sembilan jenis blok mengikuti schema fase 1.
+
+Teks kaya memakai Tiptap terbatas; gambar memakai library/upload media yang
+sudah ada, dengan alt opsional. Kelas/ujian/artikel dapat diatur sumber, jumlah,
+dan ID pilihan manual; kanvas memakai placeholder hingga integrasi fase 3.
+Kanvas ini adalah pratinjau susunan, bukan preview renderer situs utama.
+
+Autosave berjalan 1,2 detik setelah perubahan. Request diserialkan, menggunakan
+CAS, dan hanya snapshot yang diakui server dianggap tersimpan. Draft lokal
+disimpan per admin/halaman. Recovery meminta pilihan sebelum autosave berjalan;
+salinan dari versi berbeda dapat diunduh dan tidak langsung menimpa server.
+Tersedia simpan manual/retry, unduh JSON, dan peringatan perubahan belum tersimpan.
+Konflik versi menghentikan penulisan sampai admin membandingkan dengan draft terbaru.
+
+Tidak ada SQL tambahan pada fase 2. Publikasi dan renderer situs utama tetap
+menunggu fase 3–4; mengedit draft tidak mengganti landing yang sudah online.
+
+## Landing page editor — fase 3
+
+Renderer situs utama sekarang membaca snapshot publik/default, dengan kartu
+kelas, ujian, dan artikel yang diambil dari data publik. Tombol **Preview situs**
+di editor membuka snapshot tulisan saat ini pada situs utama, dengan pilihan
+desktop/mobile serta navbar/footer yang sama. Kanvas editor tetap memakai
+contoh susunan; preview situs menampilkan data sebenarnya.
+
+Jalankan `../supabase/landing_page_preview_patch.sql` setelah patch fondasi.
+Atur `LANDING_PUBLIC_ORIGIN=http://localhost:3000` untuk pengembangan lokal,
+atau origin situs utama HTTPS untuk produksi. Preview memakai tiket sekali
+pakai (2 menit), cookie HttpOnly (30 menit), no-store dan noindex. Tanpa tiket
+atau sesi valid, draft tidak dapat dibaca. Detail: `../packages/landing-page/PREVIEW.md`.
+
+Publikasi, riwayat dan sinkronisasi lintas aplikasi dilanjutkan pada fase 4.
+
+## Landing page editor — fase 4
+
+Editor menyediakan **Terbitkan**, ringkasan perubahan, dan catatan revisi.
+Riwayat `/halaman-utama/riwayat` menyediakan preview revisi dan pemulihan ke
+draft baru dengan pemeriksaan versi. Publikasi berulang memakai snapshot sama.
+
+Jalankan `../supabase/landing_page_publication_patch.sql`. Pasang
+`LANDING_REVALIDATION_SECRET` acak yang sama di server editorial dan situs utama,
+serta `LANDING_PUBLIC_ORIGIN` di editorial. Callback membersihkan cache situs
+utama dengan HMAC, timestamp, dan bukti sekali pakai yang durable. Kegagalan
+callback ditampilkan sebagai sinkronisasi tertunda dengan retry; publikasi
+yang sudah commit tetap berhasil. Cache publik memiliki TTL 300 detik.
+
+SEO, Open Graph, gambar share, dan canonical mengikuti snapshot terbit. Alt
+text tetap opsional. Detail aktivasi dan alur: `../packages/landing-page/PUBLICATION.md`.
+
+
+## Landing fase 5
+
+Fokus panel mobile/keyboard, ukuran tombol, heading renderer, prioritas gambar Hero, cache koleksi publik, dan batas body request sudah diperbaiki. Jalankan `supabase/landing_page_hardening_patch.sql` setelah fase 4; patch tidak mengubah data. Panduan konfigurasi, hasil verifikasi, dan smoke rilis ada di `../packages/landing-page/RELEASE.md`. Deployment produksi belum dilakukan.

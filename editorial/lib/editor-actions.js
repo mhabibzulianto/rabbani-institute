@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { isDeepStrictEqual } from "node:util";
+import { normalizeNewArticlePayload, newArticleSlug } from "@/lib/new-article.mjs";
 import { requireEditorialUser } from "@/lib/editorial";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { canEditArticle, normalizeEditorPayload, serializeLegacyDocument, validateEditorDocument, validArticleId } from "@/lib/editor-document.mjs";
@@ -16,6 +18,35 @@ async function authorizedArticle(id) {
   if (error || !article) return { error: "Artikel tidak tersedia atau Anda tidak memiliki akses." };
   if (!Object.hasOwn(article, "content_legacy_backup") || !Object.hasOwn(article, "content_json") || !Number.isSafeInteger(article.version)) return { error: "Jalankan patch editorial_foundation_patch.sql terbaru sebelum menyimpan ke Supabase.", code: "schema" };
   return { user, profile, article, supabase };
+}
+
+export async function saveNewEditorialArticle(input) {
+  const { user } = await requireEditorialUser();
+  let payload, slug;
+  try {
+    payload = normalizeNewArticlePayload(input);
+    slug = newArticleSlug(input.creationKey);
+  } catch (error) { return { ok: false, code: "validation", error: error.message }; }
+  const supabase = await createSupabaseServerClient();
+  const columns = "id,version,last_saved_at,status,title,excerpt,topic,tags,category_id,cover_image_url,content_json,content_schema_version";
+  // The unique slug makes retries of an interrupted first save idempotent.
+  async function previousSave() {
+    const { data, error } = await supabase.from("articles").select(columns).eq("slug", slug).eq("author_id", user.id).maybeSingle();
+    if (error || !data) return null;
+    const matches = Object.entries(payload).every(([key, value]) => isDeepStrictEqual(data[key], value));
+    if (!matches || data.status !== "draft") return { ok: false, code: "conflict", error: "Draft ini sudah berubah. Muat ulang daftar artikel untuk membuka versi tersimpan." };
+    return { ok: true, id: String(data.id), version: data.version, last_saved_at: data.last_saved_at, status: data.status };
+  }
+  const previous = await previousSave();
+  if (previous) return previous;
+  const { data, error } = await supabase.from("articles").insert({ ...payload, ...serializeLegacyDocument(payload.content_json), author_id: user.id, slug, status: "draft" }).select("id,version,last_saved_at,status").single();
+  if (error) {
+    const recovered = await previousSave();
+    if (recovered) return recovered;
+    return { ok: false, code: "save", error: "Draft belum tersimpan. Salinan lokal tetap tersedia; coba simpan lagi." };
+  }
+  revalidatePath("/artikel");
+  return { ok: true, ...data, id: String(data.id) };
 }
 
 export async function saveEditorialArticle(input) {

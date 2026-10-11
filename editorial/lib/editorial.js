@@ -1,6 +1,6 @@
 import { createSupabaseServerClient, getCurrentUser } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { canAccessEditorial } from "@/lib/access.mjs";
+import { canAccessEditorial, canManageLandingPage } from "@/lib/access.mjs";
 
 export async function touchEditorialMembership(userId) {
   if (!userId) return;
@@ -17,5 +17,12 @@ export async function requireEditorialUser() {
   const session = await getCurrentUser();
   if (!session.user) redirect("/auth?next=/beranda");
   if (!canAccessEditorial(session.profile)) redirect("/akses-ditolak");
+  return session;
+}
+
+// Also call from every landing server action: layouts do not protect actions.
+export async function requireLandingAdmin() {
+  const session = await requireEditorialUser();
+  if (!canManageLandingPage(session.profile)) redirect("/akses-ditolak");
   return session;
 }

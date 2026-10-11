@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeftIcon, FontBoldIcon, FontItalicIcon, UnderlineIcon, StrikethroughIcon, Link2Icon, ListBulletIcon, QuoteIcon, CodeIcon, DividerHorizontalIcon, TextAlignLeftIcon, TextAlignCenterIcon, TextAlignRightIcon, TextAlignJustifyIcon, ResetIcon, DownloadIcon, Cross2Icon, ImageIcon } from "@radix-ui/react-icons";
 import { articleEditorExtensions } from "@/lib/tiptap-extensions.mjs";
 import { safeEditorLink } from "@/lib/editor-links.mjs";
-import { saveEditorialArticle, publishEditorialArticle } from "@/lib/editor-actions";
+import { saveEditorialArticle, saveNewEditorialArticle, publishEditorialArticle } from "@/lib/editor-actions";
 import { ARTICLE_STATUSES } from "@/lib/article-list.mjs";
 import MediaPanel from "@/components/MediaPanel";
 import { createEditorialCategory } from "@/lib/media-actions";
@@ -23,6 +23,9 @@ function Tool({ label, icon: Icon, children, active, disabled, onClick }) {
 
 export default function ArticleEditor({ article, initialContent, unsupportedHtml, canEdit, schemaReady, admin, categories, userId }) {
   const router = useRouter();
+  const [articleId, setArticleId] = useState(article.id);
+  const articleIdRef = useRef(article.id);
+  const creationKeyRef = useRef(null);
   const [fields, setFields] = useState({ title: article.title, excerpt: article.excerpt, topic: article.topic, tags: article.tags, category: article.category, cover: article.cover || "" });
   const [categoryOptions, setCategoryOptions] = useState(categories);
   const [categoryTitle, setCategoryTitle] = useState("");
@@ -58,15 +61,16 @@ export default function ArticleEditor({ article, initialContent, unsupportedHtml
   const linkDialogRef = useRef(null);
   const publishDialogRef = useRef(null);
   const mountedRef = useRef(true);
-  const backupKey = `editorial-draft:${userId}:${article.id}`;
+  const backupKey = `editorial-draft:${userId}:${articleId || "new"}`;
   const editable = canEdit && (admin || ["draft", "rejected"].includes(status));
 
   function changed() {
+    if (!articleIdRef.current && !creationKeyRef.current) creationKeyRef.current = crypto.randomUUID();
     dirtyRef.current = JSON.stringify(latestRef.current) !== savedRef.current;
     setSaveState(schemaReady ? dirtyRef.current ? "dirty" : "saved" : "local");
     setRevision((value) => value + 1);
     try {
-      if (dirtyRef.current) localStorage.setItem(backupKey, JSON.stringify({ ...latestRef.current, baseVersion: versionRef.current, savedAt: new Date().toISOString() }));
+      if (dirtyRef.current) localStorage.setItem(backupKey, JSON.stringify({ ...latestRef.current, creationKey: creationKeyRef.current, baseVersion: versionRef.current, savedAt: new Date().toISOString() }));
       else localStorage.removeItem(backupKey);
     }
     catch { setError("Salinan lokal tidak dapat disimpan di browser ini. Unduh tulisan untuk menyimpan salinan."); }
@@ -103,10 +107,10 @@ export default function ArticleEditor({ article, initialContent, unsupportedHtml
     mountedRef.current = true;
     try {
       const backup = JSON.parse(localStorage.getItem(backupKey) || "null");
-      if (backup?.doc?.type === "doc" && typeof backup.title === "string" && (!article.last_saved_at || new Date(backup.savedAt) > new Date(article.last_saved_at))) setRecovery(backup);
+      if (!(article.id == null && articleId) && backup?.doc?.type === "doc" && typeof backup.title === "string" && (!article.last_saved_at || new Date(backup.savedAt) > new Date(article.last_saved_at))) setRecovery(backup);
     } catch { /* An invalid local backup must never replace server content. */ }
     return () => { mountedRef.current = false; };
-  }, [backupKey, article.last_saved_at]);
+  }, [backupKey, article.id, articleId, article.last_saved_at]);
 
   async function saveNow() {
     if (!editable || !schemaReady || blockedRef.current) return false;
@@ -117,7 +121,11 @@ export default function ArticleEditor({ article, initialContent, unsupportedHtml
     setSaveState("saving");
     const operation = (async () => {
       let result;
-      try { result = await saveEditorialArticle({ ...snapshot, id: article.id, version: versionRef.current }); }
+      try {
+        result = articleIdRef.current
+          ? await saveEditorialArticle({ ...snapshot, title: snapshot.title.trim() || "Tanpa judul", id: articleIdRef.current, version: versionRef.current })
+          : await saveNewEditorialArticle({ ...snapshot, creationKey: creationKeyRef.current });
+      }
       catch { result = { ok: false, code: "network", error: "Koneksi terputus. Tulisan belum tersimpan ke server; coba simpan lagi." }; }
       if (!result.ok) {
         if (["conflict", "locked", "schema", "access"].includes(result.code)) blockedRef.current = true;
@@ -125,8 +133,20 @@ export default function ArticleEditor({ article, initialContent, unsupportedHtml
         return false;
       }
       versionRef.current = result.version;
+      if (!articleIdRef.current && result.id) {
+        articleIdRef.current = result.id;
+        setArticleId(result.id);
+        // Keep the current editor and selection alive while assigning its saved URL.
+        window.history.replaceState(null, "", `/artikel/${result.id}/edit`);
+      }
       savedRef.current = JSON.stringify(snapshot);
       dirtyRef.current = JSON.stringify(latestRef.current) !== savedRef.current;
+      if (result.id) {
+        try {
+          localStorage.removeItem(backupKey);
+          if (dirtyRef.current) localStorage.setItem(`editorial-draft:${userId}:${result.id}`, JSON.stringify({ ...latestRef.current, baseVersion: result.version, savedAt: new Date().toISOString() }));
+        } catch { /* Keep the in-memory document available for download. */ }
+      }
       if (mountedRef.current) { setSaveState(dirtyRef.current ? "dirty" : "saved"); setError(""); }
       if (!dirtyRef.current) { try { localStorage.removeItem(backupKey); } catch { /* Server copy has been saved. */ } }
       return true;
@@ -205,7 +225,7 @@ export default function ArticleEditor({ article, initialContent, unsupportedHtml
     const saved = await prepareWorkflow();
     if (!saved || dirtyRef.current) { setPublishing(false); return; }
     let result;
-    try { result = await publishEditorialArticle({ id: article.id, version: versionRef.current }); }
+    try { result = await publishEditorialArticle({ id: articleIdRef.current, version: versionRef.current }); }
     catch { result = { ok: false, error: "Proses belum selesai. Periksa koneksi lalu muat ulang untuk memeriksa status artikel." }; blockedRef.current = true; }
     if (result.version) versionRef.current = result.version;
     if (result.status) setStatus(result.status);
@@ -263,7 +283,7 @@ export default function ArticleEditor({ article, initialContent, unsupportedHtml
       {!schemaReady && <p className="writing-notice">Penyimpanan ke server belum tersedia. Anda bisa mencoba editor dan mengunduh salinan tulisan.</p>}
       {!canEdit && !unsupportedHtml && <p className="writing-notice">Artikel ini hanya dapat dibaca karena statusnya {ARTICLE_STATUSES[status]?.toLowerCase() || status}.</p>}
       {error && <p className="writing-notice writing-notice-error" role="alert">{error} <button type="button" onClick={download}>Unduh salinan</button></p>}
-      {recovery && editable && <div className="writing-notice">Ada salinan tulisan dari sesi sebelumnya. <button type="button" onClick={() => { for (const name of ["title", "excerpt", "topic", "tags", "category", "cover"]) if (typeof recovery[name] === "string") fieldChanged(name, recovery[name]); editor.commands.setContent(recovery.doc, { emitUpdate: true }); setRecovery(null); }}>Pulihkan salinan</button><button type="button" onClick={() => { setRecovery(null); localStorage.removeItem(backupKey); }}>Abaikan</button></div>}
+      {recovery && editable && <div className="writing-notice">Ada salinan tulisan dari sesi sebelumnya. <button type="button" onClick={() => { if (!articleIdRef.current && recovery.creationKey) creationKeyRef.current = recovery.creationKey; for (const name of ["title", "excerpt", "topic", "tags", "category", "cover"]) if (typeof recovery[name] === "string") fieldChanged(name, recovery[name]); editor.commands.setContent(recovery.doc, { emitUpdate: true }); setRecovery(null); }}>Pulihkan salinan</button><button type="button" onClick={() => { setRecovery(null); localStorage.removeItem(backupKey); }}>Abaikan</button></div>}
       <div className="writing-document-label"><span>ARTIKEL</span><span>{ARTICLE_STATUSES[status] || status}</span></div>
       <div className="writing-cover">{fields.cover && <>
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -276,7 +296,7 @@ export default function ArticleEditor({ article, initialContent, unsupportedHtml
         <label>Topik<input value={fields.topic} maxLength={200} disabled={!editable || publishing} onChange={(event) => fieldChanged("topic", event.target.value)} /></label>
         <label>Tag<input value={fields.tags} maxLength={1000} placeholder="Pisahkan dengan koma" disabled={!editable || publishing} onChange={(event) => fieldChanged("tags", event.target.value)} /></label>
       </div></details>
-      <ArticleWorkflow article={article} admin={admin} status={status} ready={schemaReady && article.workflowReady} schedulerReady={article.schedulerReady} getVersion={() => versionRef.current} beforeAction={prepareWorkflow} onBusyChange={setPublishing} onChanged={(result) => { versionRef.current = result.version; setStatus(result.status); updateToolbar((value) => value+1); router.refresh(); }} />
+      {articleId && <ArticleWorkflow article={{ ...article, id: articleId }} admin={admin} status={status} ready={schemaReady && article.workflowReady} schedulerReady={article.schedulerReady} getVersion={() => versionRef.current} beforeAction={prepareWorkflow} onBusyChange={setPublishing} onChanged={(result) => { versionRef.current = result.version; setStatus(result.status); updateToolbar((value) => value+1); router.refresh(); }} />}
       {unsupportedHtml != null ? <><p className="writing-notice">Artikel ini memakai blok khusus yang belum didukung editor MVP. Isi ditampilkan sebagai preview agar format aslinya tetap utuh.</p><div className="writing-prose" dangerouslySetInnerHTML={{ __html: unsupportedHtml }} /></> : editor ? <EditorContent editor={editor} /> : <p className="writing-editor-loading" role="status">Menyiapkan editor…</p>}
       <p className="writing-hint">Ketik <kbd>/</kbd> di awal paragraf untuk memilih blok. <kbd>Ctrl/Cmd+S</kbd> untuk menyimpan. Gunakan <kbd>**teks**</kbd> untuk tebal, <kbd>##</kbd> untuk heading, atau <kbd>-</kbd> untuk daftar.</p>
     </div>

@@ -9,3 +9,11 @@ export function canAccessEditorial(profile) {
 export function canReviewArticles(profile) {
   return profile?.role === "admin";
 }
+
+export function canManageLandingPage(profile) {
+  return profile?.role === "admin";
+}
+
+export function landingSettingItems(items, profile) {
+  return items.filter((item) => item.href !== "/halaman-utama" || canManageLandingPage(profile));
+}

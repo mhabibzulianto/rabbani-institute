@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import MobileNavigation from "./MobileNavigation";
+import { landingSettingItems } from "@/lib/access.mjs";
 import {
   BarChart3,
   ChevronDown,
@@ -56,6 +57,7 @@ function getInitials(name) {
 export default function AppShell({ children, profile }) {
   const pathname = usePathname();
   const displayName = profile?.full_name || "Pengguna Rabbani";
+  const visibleSettingItems = landingSettingItems(settingItems, profile);
   const isArticlePreview = /^\/artikel\/\d+$/.test(pathname);
 
   return (
@@ -111,7 +113,7 @@ export default function AppShell({ children, profile }) {
             <ChevronDown size={16} />
           </summary>
           <div className="sidebar-list sidebar-sublist">
-            {settingItems.map((item) => (
+            {visibleSettingItems.map((item) => (
               <Link
                 key={item.href}
                 className={`sidebar-link ${isActive(pathname, item.href) ? "is-active" : ""}`}
@@ -155,7 +157,7 @@ export default function AppShell({ children, profile }) {
       </aside>
 
       <div className="content-shell">{children}</div>
-      <MobileNavigation displayName={displayName} initials={getInitials(displayName)} remainingItems={[primaryItems[2], ...settingItems, ...profileItems, { href: "/auth/logout", label: "Logout", icon: LogOut }]} />
+      <MobileNavigation displayName={displayName} initials={getInitials(displayName)} remainingItems={[primaryItems[2], ...visibleSettingItems, ...profileItems, { href: "/auth/logout", label: "Logout", icon: LogOut }]} />
     </div>
   );
 }
