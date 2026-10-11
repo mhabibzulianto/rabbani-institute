@@ -1,0 +1,32 @@
+.writing-quran-dialog { width: min(680px, calc(100vw - 32px)); max-height: min(850px, calc(100dvh - 48px)); padding: 0; border: 1px solid #dce4e9; border-radius: 16px; color: #18334a; box-shadow: 0 24px 80px #102b4340; overflow: auto; }
+.writing-quran-dialog::backdrop { background: #112e4866; }
+.writing-quran-dialog > header, .writing-quran-dialog > footer { position: sticky; display: flex; align-items: center; justify-content: space-between; gap: 16px; background: white; padding: 18px 22px; z-index: 1; }
+.writing-quran-dialog > header { top: 0; border-bottom: 1px solid #dce4e9; }
+.writing-quran-dialog > footer { bottom: 0; border-top: 1px solid #dce4e9; justify-content: flex-end; }
+.writing-quran-dialog h2 { margin: 0; font-size: 1.25rem; }
+.writing-quran-dialog header p { margin: 5px 0 0; color: #698093; font-size: .85rem; }
+.writing-quran-dialog header button { width: 36px; height: 36px; border: 0; border-radius: 8px; background: #eef3f6; cursor: pointer; font-size: 1.5rem; }
+.writing-quran-body { padding: 20px 22px; }
+.writing-quran-body > label, .writing-quran-range label { display: grid; gap: 7px; margin-bottom: 14px; font-size: .9rem; font-weight: 600; }
+.writing-quran-body :is(input:not([type=checkbox]):not([type=radio]), select) { width: 100%; min-width: 0; border: 1px solid #ccdbe4; background: white; color: inherit; padding: 10px 12px; border-radius: 8px; font: inherit; }
+.writing-quran-range { display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: end; }
+.writing-quran-range label { margin: 0; }
+.writing-quran-range button { min-height: 42px; }
+.writing-quran-hint { font-size: .85rem; line-height: 1.6; color: #698093; }
+.writing-quran-error { color: #a62d30; font-size: .9rem; }
+.writing-quran-body > .writing-quran-check { display: flex; align-items: center; gap: 8px; margin-top: 22px; }
+.writing-quran-mode { border: 1px solid #dce4e9; border-radius: 8px; padding: 12px; display: flex; flex-wrap: wrap; gap: 18px; }
+.writing-quran-mode legend { font-size: .85rem; }
+.writing-quran-mode label { display: flex; align-items: center; gap: 6px; font-size: .9rem; }
+.writing-quran-words section { margin: 16px 0; }
+.writing-quran-dialog h3 { font-size: .9rem; margin: 0 0 8px; }
+.writing-quran-words [dir=rtl] { display: flex; flex-wrap: wrap; gap: 6px; }
+.writing-quran-words button { font-family: inherit; font-size: 1.5rem; line-height: 1.9; padding: 2px 8px; border-radius: 6px; border: 1px solid #dce4e9; background: white; color: inherit; cursor: pointer; }
+.writing-quran-words button.is-selected { background: #e4f2f5; border-color: #7babb8; }
+.writing-quran-words button:disabled { opacity: .75; cursor: default; }
+.writing-quran-preview { background: #f7f9fb; border: 1px solid #dce4e9; border-radius: 12px; padding: 16px; margin-top: 20px; }
+.writing-quran-preview [dir=rtl] { text-align: right; font-size: 1.5rem; line-height: 2.1; overflow-wrap: anywhere; }
+.writing-quran-preview [dir=rtl] p { margin: 12px 0; }
+.writing-quran-reference { font-size: .85rem; margin-bottom: 0; }
+.writing-quran-dialog button:focus-visible, .writing-quran-dialog input:focus-visible, .writing-quran-dialog select:focus-visible { outline: 2px solid #20738b; outline-offset: 2px; }
+@media (max-width: 600px) { .writing-quran-dialog { width: 100%; max-width: 100%; max-height: 95dvh; margin: auto 0 0; border-radius: 16px 16px 0 0; } .writing-quran-dialog > footer { padding-bottom: calc(16px + env(safe-area-inset-bottom)); } .writing-quran-range { grid-template-columns: 1fr 1fr; } .writing-quran-range button { grid-column: 1 / -1; } .writing-quran-dialog > header, .writing-quran-dialog > footer, .writing-quran-body { padding-inline: 16px; } }

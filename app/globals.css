@@ -4483,3 +4483,16 @@ body:has(.article-studio-page) .floating-contact-shell {
     @apply font-sans;
   }
 }
+
+.article-footnotes li{white-space:pre-wrap;overflow-wrap:anywhere}.article-footnote-mark a{scroll-margin-top:100px}.article-footnotes li{scroll-margin-top:100px}
+
+.article-arabic-text {
+  direction: rtl;
+  text-align: right;
+  font-size: 1.5rem;
+  line-height: 2.1;
+  margin-block: 1.25rem;
+  overflow-wrap: anywhere;
+}
+.article-arabic-text :is(p, h1, h2, h3, h4, li) { text-align: right !important; }
+.article-arabic-text :is(ul, ol) { padding-left: 0; padding-right: 1.5em; }

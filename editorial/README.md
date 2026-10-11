@@ -132,7 +132,7 @@ kode inline, link, bullet/numbered list, kutipan, garis pemisah, alignment,
 undo/redo, dan unduhan JSON. Metadata judul, ringkasan, kategori, topik, dan tag
 dapat diubah. Buka editor melalui tombol pada preview atau setelah membuat draft.
 
-Autosave berjalan 1,2 detik setelah perubahan terakhir dan dapat dipicu dengan
+Autosave artikel berjalan 10 detik setelah perubahan terakhir dan dapat dipicu dengan
 tombol Simpan atau Ctrl/Cmd+S. Request diserialkan, memakai version/status yang
 diharapkan, memeriksa pemilik/role di server, dan tidak menimpa hasil konflik.
 Salinan lokal dipisahkan per pengguna/artikel, ditawarkan untuk dipulihkan saat
@@ -375,3 +375,13 @@ text tetap opsional. Detail aktivasi dan alur: `../packages/landing-page/PUBLICA
 ## Landing fase 5
 
 Fokus panel mobile/keyboard, ukuran tombol, heading renderer, prioritas gambar Hero, cache koleksi publik, dan batas body request sudah diperbaiki. Jalankan `supabase/landing_page_hardening_patch.sql` setelah fase 4; patch tidak mengubah data. Panduan konfigurasi, hasil verifikasi, dan smoke rilis ada di `../packages/landing-page/RELEASE.md`. Deployment produksi belum dilakukan.
+
+## Catatan kaki di editor artikel
+
+Tombol **Tambah catatan kaki** (x¹) menyisipkan penanda pada posisi kursor. Desktop memakai popover, mobile memakai bottom sheet. Klik penanda atau Edit pada daftar di bawah artikel untuk memperbarui/hapus catatan. Escape/Batal kembali ke tulisan. Setiap aksi menjadi satu langkah Undo. Nomor mengikuti urutan penanda; ID tetap saat edit/pindah, dan salinan mendapat ID baru.
+
+Catatan berupa teks biasa hingga 4.000 karakter, maksimal 200 per artikel; URL http/https ditampilkan sebagai tautan aman. Catatan tersimpan di content_json dan diserialisasi ke pembaca publik, termasuk preview, riwayat dan pemulihan. Tidak memerlukan patch SQL tambahan.
+
+Blok teks Arab: tombol **ع** pada toolbar atau perintah slash **Teks Arab** membuat blok RTL yang selalu rata kanan. Klik tombol yang sama untuk mengembalikan paragraf terpilih ke teks biasa; **Ctrl+Enter** (Mac: **Cmd+Enter**) membuka paragraf biasa setelah blok. Format teks dan catatan kaki tetap tersedia, dan arah RTL dipertahankan di preview serta artikel publik. Tidak memerlukan patch SQL baru.
+
+Sisipkan ayat: tombol **۞** atau slash **Ayat Al-Qur’an** membuka pilihan surat (nama/nomor), satu ayat atau rentang hingga 20 ayat, dan pilihan kata awal/akhir. Teks Utsmani dan pembagian kata diambil dari API publik Quran.com melalui endpoint editorial yang memeriksa akses pengguna, tanpa API key atau terjemahan. Katalog 114 surat/6.236 ayat berasal dari https://api.quran.com/api/v4/chapters?language=id (diambil 11 Oktober 2026); teks ayat divalidasi dan di-cache harian. Potongan mempertahankan harakat/tanda waqaf sumber dan diberi penanda elipsis serta referensi potongan. Hasil adalah blok Arab biasa dan paragraf referensi yang sama-sama dapat diedit, disimpan, dan di-undo. Tidak ada node atom baru maupun patch SQL baru.

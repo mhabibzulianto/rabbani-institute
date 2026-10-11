@@ -1,0 +1,127 @@
+{
+  "verse_key": "2:256",
+  "verse_number": 256,
+  "text_uthmani": "لَآ إِكْرَاهَ فِى ٱلدِّينِ ۖ قَد تَّبَيَّنَ ٱلرُّشْدُ مِنَ ٱلْغَىِّ ۚ فَمَن يَكْفُرْ بِٱلطَّـٰغُوتِ وَيُؤْمِنۢ بِٱللَّهِ فَقَدِ ٱسْتَمْسَكَ بِٱلْعُرْوَةِ ٱلْوُثْقَىٰ لَا ٱنفِصَامَ لَهَا ۗ وَٱللَّهُ سَمِيعٌ عَلِيمٌ",
+  "words": [
+    {
+      "position": 1,
+      "char_type_name": "word",
+      "text_uthmani": "لَآ"
+    },
+    {
+      "position": 2,
+      "char_type_name": "word",
+      "text_uthmani": "إِكْرَاهَ"
+    },
+    {
+      "position": 3,
+      "char_type_name": "word",
+      "text_uthmani": "فِى"
+    },
+    {
+      "position": 4,
+      "char_type_name": "word",
+      "text_uthmani": "ٱلدِّينِ ۖ"
+    },
+    {
+      "position": 5,
+      "char_type_name": "word",
+      "text_uthmani": "قَد"
+    },
+    {
+      "position": 6,
+      "char_type_name": "word",
+      "text_uthmani": "تَّبَيَّنَ"
+    },
+    {
+      "position": 7,
+      "char_type_name": "word",
+      "text_uthmani": "ٱلرُّشْدُ"
+    },
+    {
+      "position": 8,
+      "char_type_name": "word",
+      "text_uthmani": "مِنَ"
+    },
+    {
+      "position": 9,
+      "char_type_name": "word",
+      "text_uthmani": "ٱلْغَىِّ ۚ"
+    },
+    {
+      "position": 10,
+      "char_type_name": "word",
+      "text_uthmani": "فَمَن"
+    },
+    {
+      "position": 11,
+      "char_type_name": "word",
+      "text_uthmani": "يَكْفُرْ"
+    },
+    {
+      "position": 12,
+      "char_type_name": "word",
+      "text_uthmani": "بِٱلطَّـٰغُوتِ"
+    },
+    {
+      "position": 13,
+      "char_type_name": "word",
+      "text_uthmani": "وَيُؤْمِنۢ"
+    },
+    {
+      "position": 14,
+      "char_type_name": "word",
+      "text_uthmani": "بِٱللَّهِ"
+    },
+    {
+      "position": 15,
+      "char_type_name": "word",
+      "text_uthmani": "فَقَدِ"
+    },
+    {
+      "position": 16,
+      "char_type_name": "word",
+      "text_uthmani": "ٱسْتَمْسَكَ"
+    },
+    {
+      "position": 17,
+      "char_type_name": "word",
+      "text_uthmani": "بِٱلْعُرْوَةِ"
+    },
+    {
+      "position": 18,
+      "char_type_name": "word",
+      "text_uthmani": "ٱلْوُثْقَىٰ"
+    },
+    {
+      "position": 19,
+      "char_type_name": "word",
+      "text_uthmani": "لَا"
+    },
+    {
+      "position": 20,
+      "char_type_name": "word",
+      "text_uthmani": "ٱنفِصَامَ"
+    },
+    {
+      "position": 21,
+      "char_type_name": "word",
+      "text_uthmani": "لَهَا ۗ"
+    },
+    {
+      "position": 22,
+      "char_type_name": "word",
+      "text_uthmani": "وَٱللَّهُ"
+    },
+    {
+      "position": 23,
+      "char_type_name": "word",
+      "text_uthmani": "سَمِيعٌ"
+    },
+    {
+      "position": 24,
+      "char_type_name": "word",
+      "text_uthmani": "عَلِيمٌ"
+    }
+  ]
+}

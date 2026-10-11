@@ -1,5 +1,6 @@
 import { formatHarvardCitation } from "@/lib/article-citations";
 import { getArticleDocument } from "@/lib/gutenberg-content";
+import { footnoteLinks } from "../packages/article-footnotes/index.mjs";
 
 export default function ArticleRenderer({ contentRaw, blocks }) {
   const document = getArticleDocument(contentRaw || blocks);
@@ -16,6 +17,15 @@ export default function ArticleRenderer({ contentRaw, blocks }) {
 
   const footnotes = [];
   const footnoteIds = new Set();
+  function collect(node, depth = 0) {
+    if (!node || depth > 40) return;
+    if (node.footnoteCitation?.id && !footnoteIds.has(node.footnoteCitation.id)) {
+      footnoteIds.add(node.footnoteCitation.id);
+      footnotes.push({ ...node.footnoteCitation, number: footnotes.length + 1 });
+    }
+    for (const child of node.children || []) collect(child, depth + 1);
+  }
+  document.value.forEach(node => collect(node));
 
   return (
     <div className="article-content">
@@ -34,7 +44,8 @@ export default function ArticleRenderer({ contentRaw, blocks }) {
           <ol>
             {footnotes.map((footnote) => (
               <li id={footnote.id} key={footnote.id}>
-                {formatHarvardCitation(footnote)}
+                {footnote.text ? footnoteLinks(footnote.text).map((part, index) => part.href ? <a key={index} href={part.href} target="_blank" rel="noopener noreferrer">{part.text}</a> : part.text) : formatHarvardCitation(footnote)}
+                {footnote.text && <> <a href={`#article-footnote-ref-${footnote.id}`} aria-label={`Kembali ke penanda ${footnote.number}`}>↩</a></>}
               </li>
             ))}
           </ol>
@@ -66,6 +77,8 @@ function PlateNodeRenderer({ footnoteIds, footnotes, node }) {
       return <blockquote className="article-quote-block">{children}</blockquote>;
     case "ayah-quote":
       return <blockquote className="article-quran-block">{children}</blockquote>;
+    case "arabic-text":
+      return <div className="article-arabic-text" dir="rtl" lang="ar">{children}</div>;
     case "arabic-quote":
       return <blockquote className="article-arabic-block">{children}</blockquote>;
     case "ul":
@@ -172,8 +185,8 @@ function renderLeaf(leaf, footnotes, footnoteIds) {
     }
 
     content = (
-      <sup className="article-footnote-mark">
-        <a href={`#${leaf.footnoteCitation.id}`}>{leaf.footnoteCitation.number || content}</a>
+      <sup className="article-footnote-mark" id={`article-footnote-ref-${leaf.footnoteCitation.id}`}>
+        <a href={`#${leaf.footnoteCitation.id}`}>[{footnotes.findIndex(note => note.id === leaf.footnoteCitation.id) + 1}]</a>
       </sup>
     );
   }

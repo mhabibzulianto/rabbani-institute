@@ -1,0 +1,257 @@
+{
+  "verse_key": "2:255",
+  "verse_number": 255,
+  "text_uthmani": "ٱللَّهُ لَآ إِلَـٰهَ إِلَّا هُوَ ٱلْحَىُّ ٱلْقَيُّومُ ۚ لَا تَأْخُذُهُۥ سِنَةٌ وَلَا نَوْمٌ ۚ لَّهُۥ مَا فِى ٱلسَّمَـٰوَٰتِ وَمَا فِى ٱلْأَرْضِ ۗ مَن ذَا ٱلَّذِى يَشْفَعُ عِندَهُۥٓ إِلَّا بِإِذْنِهِۦ ۚ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ ۖ وَلَا يُحِيطُونَ بِشَىْءٍ مِّنْ عِلْمِهِۦٓ إِلَّا بِمَا شَآءَ ۚ وَسِعَ كُرْسِيُّهُ ٱلسَّمَـٰوَٰتِ وَٱلْأَرْضَ ۖ وَلَا يَـُٔودُهُۥ حِفْظُهُمَا ۚ وَهُوَ ٱلْعَلِىُّ ٱلْعَظِيمُ",
+  "words": [
+    {
+      "position": 1,
+      "char_type_name": "word",
+      "text_uthmani": "ٱللَّهُ"
+    },
+    {
+      "position": 2,
+      "char_type_name": "word",
+      "text_uthmani": "لَآ"
+    },
+    {
+      "position": 3,
+      "char_type_name": "word",
+      "text_uthmani": "إِلَـٰهَ"
+    },
+    {
+      "position": 4,
+      "char_type_name": "word",
+      "text_uthmani": "إِلَّا"
+    },
+    {
+      "position": 5,
+      "char_type_name": "word",
+      "text_uthmani": "هُوَ"
+    },
+    {
+      "position": 6,
+      "char_type_name": "word",
+      "text_uthmani": "ٱلْحَىُّ"
+    },
+    {
+      "position": 7,
+      "char_type_name": "word",
+      "text_uthmani": "ٱلْقَيُّومُ ۚ"
+    },
+    {
+      "position": 8,
+      "char_type_name": "word",
+      "text_uthmani": "لَا"
+    },
+    {
+      "position": 9,
+      "char_type_name": "word",
+      "text_uthmani": "تَأْخُذُهُۥ"
+    },
+    {
+      "position": 10,
+      "char_type_name": "word",
+      "text_uthmani": "سِنَةٌۭ"
+    },
+    {
+      "position": 11,
+      "char_type_name": "word",
+      "text_uthmani": "وَلَا"
+    },
+    {
+      "position": 12,
+      "char_type_name": "word",
+      "text_uthmani": "نَوْمٌۭ ۚ"
+    },
+    {
+      "position": 13,
+      "char_type_name": "word",
+      "text_uthmani": "لَّهُۥ"
+    },
+    {
+      "position": 14,
+      "char_type_name": "word",
+      "text_uthmani": "مَا"
+    },
+    {
+      "position": 15,
+      "char_type_name": "word",
+      "text_uthmani": "فِى"
+    },
+    {
+      "position": 16,
+      "char_type_name": "word",
+      "text_uthmani": "ٱلسَّمَـٰوَٰتِ"
+    },
+    {
+      "position": 17,
+      "char_type_name": "word",
+      "text_uthmani": "وَمَا"
+    },
+    {
+      "position": 18,
+      "char_type_name": "word",
+      "text_uthmani": "فِى"
+    },
+    {
+      "position": 19,
+      "char_type_name": "word",
+      "text_uthmani": "ٱلْأَرْضِ ۗ"
+    },
+    {
+      "position": 20,
+      "char_type_name": "word",
+      "text_uthmani": "مَن"
+    },
+    {
+      "position": 21,
+      "char_type_name": "word",
+      "text_uthmani": "ذَا"
+    },
+    {
+      "position": 22,
+      "char_type_name": "word",
+      "text_uthmani": "ٱلَّذِى"
+    },
+    {
+      "position": 23,
+      "char_type_name": "word",
+      "text_uthmani": "يَشْفَعُ"
+    },
+    {
+      "position": 24,
+      "char_type_name": "word",
+      "text_uthmani": "عِندَهُۥٓ"
+    },
+    {
+      "position": 25,
+      "char_type_name": "word",
+      "text_uthmani": "إِلَّا"
+    },
+    {
+      "position": 26,
+      "char_type_name": "word",
+      "text_uthmani": "بِإِذْنِهِۦ ۚ"
+    },
+    {
+      "position": 27,
+      "char_type_name": "word",
+      "text_uthmani": "يَعْلَمُ"
+    },
+    {
+      "position": 28,
+      "char_type_name": "word",
+      "text_uthmani": "مَا"
+    },
+    {
+      "position": 29,
+      "char_type_name": "word",
+      "text_uthmani": "بَيْنَ"
+    },
+    {
+      "position": 30,
+      "char_type_name": "word",
+      "text_uthmani": "أَيْدِيهِمْ"
+    },
+    {
+      "position": 31,
+      "char_type_name": "word",
+      "text_uthmani": "وَمَا"
+    },
+    {
+      "position": 32,
+      "char_type_name": "word",
+      "text_uthmani": "خَلْفَهُمْ ۖ"
+    },
+    {
+      "position": 33,
+      "char_type_name": "word",
+      "text_uthmani": "وَلَا"
+    },
+    {
+      "position": 34,
+      "char_type_name": "word",
+      "text_uthmani": "يُحِيطُونَ"
+    },
+    {
+      "position": 35,
+      "char_type_name": "word",
+      "text_uthmani": "بِشَىْءٍۢ"
+    },
+    {
+      "position": 36,
+      "char_type_name": "word",
+      "text_uthmani": "مِّنْ"
+    },
+    {
+      "position": 37,
+      "char_type_name": "word",
+      "text_uthmani": "عِلْمِهِۦٓ"
+    },
+    {
+      "position": 38,
+      "char_type_name": "word",
+      "text_uthmani": "إِلَّا"
+    },
+    {
+      "position": 39,
+      "char_type_name": "word",
+      "text_uthmani": "بِمَا"
+    },
+    {
+      "position": 40,
+      "char_type_name": "word",
+      "text_uthmani": "شَآءَ ۚ"
+    },
+    {
+      "position": 41,
+      "char_type_name": "word",
+      "text_uthmani": "وَسِعَ"
+    },
+    {
+      "position": 42,
+      "char_type_name": "word",
+      "text_uthmani": "كُرْسِيُّهُ"
+    },
+    {
+      "position": 43,
+      "char_type_name": "word",
+      "text_uthmani": "ٱلسَّمَـٰوَٰتِ"
+    },
+    {
+      "position": 44,
+      "char_type_name": "word",
+      "text_uthmani": "وَٱلْأَرْضَ ۖ"
+    },
+    {
+      "position": 45,
+      "char_type_name": "word",
+      "text_uthmani": "وَلَا"
+    },
+    {
+      "position": 46,
+      "char_type_name": "word",
+      "text_uthmani": "يَـُٔودُهُۥ"
+    },
+    {
+      "position": 47,
+      "char_type_name": "word",
+      "text_uthmani": "حِفْظُهُمَا ۚ"
+    },
+    {
+      "position": 48,
+      "char_type_name": "word",
+      "text_uthmani": "وَهُوَ"
+    },
+    {
+      "position": 49,
+      "char_type_name": "word",
+      "text_uthmani": "ٱلْعَلِىُّ"
+    },
+    {
+      "position": 50,
+      "char_type_name": "word",
+      "text_uthmani": "ٱلْعَظِيمُ"
+    }
+  ]
+}

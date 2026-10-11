@@ -1436,3 +1436,18 @@ p.page-badge {
   .article-preview-prose { font-size: 0.95rem; }
   .preview-columns, .preview-columns-three { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Arabic text blocks retain their direction across editing and preview. */
+.writing-prose .writing-arabic-block,
+:is(.article-preview-prose, .publication-prose) div.preview-arabic {
+  direction: rtl;
+  text-align: right;
+  font-size: 1.5rem;
+  line-height: 2.1;
+  margin-block: 1.25rem;
+  overflow-wrap: anywhere;
+}
+.writing-prose .writing-arabic-block :is(p, h2, h3, h4, li),
+:is(.article-preview-prose, .publication-prose) div.preview-arabic :is(p, h2, h3, h4, li) { text-align: right !important; }
+.writing-prose .writing-arabic-block :is(ul, ol),
+:is(.article-preview-prose, .publication-prose) div.preview-arabic :is(ul, ol) { padding-left: 0; padding-right: 1.5em; }

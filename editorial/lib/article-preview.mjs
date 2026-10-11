@@ -1,5 +1,6 @@
 import sanitizeHtml from "sanitize-html";
 import { articleListHref, normalizeArticleFilters } from "./article-list.mjs";
+import { footnoteHtml, validFootnoteId, validFootnoteText } from "../../packages/article-footnotes/index.mjs";
 
 const escape = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
 const paragraph = (text) => `<p>${escape(text).replace(/\n/g, "<br />")}</p>`;
@@ -45,6 +46,11 @@ export function getArticlePreview(article) {
   let processed = 0;
   function renderNode(node, depth = 0) {
     if (!node || typeof node !== "object" || depth > 40 || ++processed > 20000) return "";
+    if (node.type === "footnote" && validFootnoteId(node.attrs?.id) && validFootnoteText(node.attrs?.text)) {
+      if (!citations.has(node.attrs.id)) citations.set(node.attrs.id, { ...node.attrs, index: citations.size + 1 });
+      const number = citations.get(node.attrs.id).index;
+      return `<sup id="preview-footnote-ref-${number}"><a href="#preview-footnote-${number}">[${number}]</a></sup>`;
+    }
     if (node.type === "text" || typeof node.text === "string") {
       let html = escape(node.text);
       const marks = Array.isArray(node.marks) ? node.marks : [];
@@ -57,7 +63,7 @@ export function getArticlePreview(article) {
         const citation = node.footnoteCitation;
         if (!citations.has(citation.id)) citations.set(citation.id, { ...citation, index: citations.size + 1 });
         const number = citations.get(citation.id).index;
-        html = `<sup><a href="#preview-footnote-${number}">${number}</a></sup>`;
+        html = `<sup${citation.text ? ` id="preview-footnote-ref-${number}"` : ""}><a href="#preview-footnote-${number}">${citation.text ? `[${number}]` : number}</a></sup>`;
       }
       return html;
     }
@@ -74,6 +80,7 @@ export function getArticlePreview(article) {
       case "hardBreak": return "<br />";
       case "horizontalRule": case "hr": return "<hr />";
       case "blockquote": return `<blockquote>${children}</blockquote>`;
+      case "arabicBlock": case "arabic-text": return `<div class="preview-arabic" dir="rtl" lang="ar">${children}</div>`;
       case "ayah-quote": case "arabic-quote": return `<blockquote class="${node.type === "ayah-quote" ? "preview-quran" : "preview-arabic"}" dir="rtl" lang="ar">${children}</blockquote>`;
       case "bulletList": case "ul": return `<ul>${children}</ul>`;
       case "orderedList": case "ol": return `<ol start="${Math.max(1, Number(attrs.start) || 1)}">${children}</ol>`;
@@ -127,7 +134,7 @@ export function getArticlePreview(article) {
   if (citations.size) {
     raw += `<section class="preview-footnotes"><h2>Catatan kaki</h2><ol>${Array.from(citations.values()).map((citation) => {
       const text = [citation.author || "Anon.", citation.year || "n.d.", citation.title, citation.publisher || citation.publication || citation.journal, citation.page ? `hlm. ${citation.page}` : "", citation.note].filter(Boolean).join(". ");
-      return `<li id="preview-footnote-${citation.index}">${escape(text)}${citation.url ? ` <a href="${escape(citation.url)}">Sumber</a>` : ""}</li>`;
+      return `<li id="preview-footnote-${citation.index}">${citation.text ? footnoteHtml(citation.text) : escape(text)}${citation.url ? ` <a href="${escape(citation.url)}">Sumber</a>` : ""}${citation.text ? ` <a href="#preview-footnote-ref-${citation.index}" title="Kembali ke teks">↩</a>` : ""}</li>`;
     }).join("")}</ol></section>`;
   }
   const html = sanitizeArticleHtml(raw);

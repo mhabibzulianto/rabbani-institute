@@ -83,7 +83,8 @@ export async function restoreArticleRevision({ id, version, revisionId }) {
   if (!["draft", "rejected"].includes(access.article.status)) return { ok:false, error:"Kembalikan artikel ke draft sebelum memulihkan revisi." };
   const { data, error } = await access.supabase.rpc("restore_editorial_revision", { target_article_id:id, expected_version:version, target_revision_id:revisionId });
   if (error?.code === "PGRST202" || error?.code === "42883") return { ok:false, error:"Jalankan editorial_polish_patch.sql untuk mengaktifkan pemulihan revisi." };
-  return result(data,error);
+  const restored = result(data,error);
+  return restored.ok ? { ...restored, restored: true } : restored;
 }
 export async function previewEditorialDraft(input) {
   await requireEditorialUser();

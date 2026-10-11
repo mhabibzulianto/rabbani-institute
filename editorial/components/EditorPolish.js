@@ -5,7 +5,7 @@ import { documentOutline, matchingSlashCommands } from "@/lib/editor-polish.mjs"
 
 const bubbleOptions = { strategy: "fixed", placement: "top", offset: 10, shift: { padding:12 }, flip: { padding: { top:175, bottom:70, left:12, right:12 } } };
 
-export default function EditorPolish({ editor, slash, slashControls, onMedia, onLink, disabled }) {
+export default function EditorPolish({ editor, slash, slashControls, onMedia, onQuran, onLink, disabled }) {
   const [index, setIndex] = useState(0);
   const [dismissed, setDismissed] = useState(null);
   const [position, setPosition] = useState(null);
@@ -21,6 +21,7 @@ export default function EditorPolish({ editor, slash, slashControls, onMedia, on
     if (!item || !slash || disabled) return;
     const chain = editor.chain().focus().deleteRange({ from: slash.from, to: slash.to });
     if (item.id === "media") { chain.run(); onMedia(); }
+    else if (item.id === "quran") { chain.run(); onQuran(); }
     else chain[item.command](item.args).run();
   }
   useEffect(() => { setIndex(0); setDismissed(null); }, [key]);

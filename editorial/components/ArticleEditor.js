@@ -15,6 +15,8 @@ import ArticleWorkflow from "@/components/ArticleWorkflow";
 import PublicationPreview from "@/components/PublicationPreview";
 import { previewEditorialDraft } from "@/lib/workflow-actions";
 import EditorPolish from "@/components/EditorPolish";
+import ArticleQuranPicker from "@/components/ArticleQuranPicker";
+import ArticleFootnotes from "@/components/ArticleFootnotes";
 import { EditorPolish as PolishExtension } from "@/lib/editor-polish-extension.mjs";
 
 function Tool({ label, icon: Icon, children, active, disabled, onClick }) {
@@ -61,6 +63,9 @@ export default function ArticleEditor({ article, initialContent, unsupportedHtml
   const linkDialogRef = useRef(null);
   const publishDialogRef = useRef(null);
   const mountedRef = useRef(true);
+  const recoveryCheckedRef = useRef(false);
+  const footnotesRef = useRef(null);
+  const quranRef = useRef(null);
   const backupKey = `editorial-draft:${userId}:${articleId || "new"}`;
   const editable = canEdit && (admin || ["draft", "rejected"].includes(status));
 
@@ -105,11 +110,15 @@ export default function ArticleEditor({ article, initialContent, unsupportedHtml
   }, [fields.title]);
   useEffect(() => {
     mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+  useEffect(() => {
+    if (recoveryCheckedRef.current) return;
+    recoveryCheckedRef.current = true;
     try {
       const backup = JSON.parse(localStorage.getItem(backupKey) || "null");
       if (!(article.id == null && articleId) && backup?.doc?.type === "doc" && typeof backup.title === "string" && (!article.last_saved_at || new Date(backup.savedAt) > new Date(article.last_saved_at))) setRecovery(backup);
     } catch { /* An invalid local backup must never replace server content. */ }
-    return () => { mountedRef.current = false; };
   }, [backupKey, article.id, articleId, article.last_saved_at]);
 
   async function saveNow() {
@@ -159,7 +168,7 @@ export default function ArticleEditor({ article, initialContent, unsupportedHtml
   saveFnRef.current = saveNow;
   useEffect(() => {
     if (!revision || !schemaReady || !editable) return;
-    const timer = setTimeout(() => { saveFnRef.current(); }, 1200);
+    const timer = setTimeout(() => { saveFnRef.current(); }, 10000);
     return () => clearTimeout(timer);
   }, [revision, schemaReady, editable]);
   useEffect(() => {
@@ -263,10 +272,13 @@ export default function ArticleEditor({ article, initialContent, unsupportedHtml
         <span className="writing-tool-divider" />
         {[["bold", "Tebal", FontBoldIcon, "toggleBold"], ["italic", "Miring", FontItalicIcon, "toggleItalic"], ["underline", "Garis bawah", UnderlineIcon, "toggleUnderline"], ["strike", "Coret", StrikethroughIcon, "toggleStrike"], ["code", "Kode inline", CodeIcon, "toggleCode"]].map(([mark, label, icon, command]) => <Tool key={mark} label={label} icon={icon} active={editor?.isActive(mark) || false} disabled={disabled} onClick={() => editor.chain().focus()[command]().run()} />)}
         <Tool label="Tautan" icon={Link2Icon} active={editor?.isActive("link") || false} disabled={disabled} onClick={openLink} />
+        <Tool label="Tambah catatan kaki" disabled={disabled} onClick={() => footnotesRef.current?.openNew()}>x¹</Tool>
         <Tool label="Sisipkan atau edit media" icon={ImageIcon} disabled={disabled} onClick={() => openMedia()} />
         <span className="writing-tool-divider" />
         <Tool label="Daftar bullet" icon={ListBulletIcon} active={editor?.isActive("bulletList") || false} disabled={disabled} onClick={() => editor.chain().focus().toggleBulletList().run()} />
         <Tool label="Daftar bernomor" active={editor?.isActive("orderedList") || false} disabled={disabled} onClick={() => editor.chain().focus().toggleOrderedList().run()}>1.</Tool>
+        <Tool label="Sisipkan ayat Al-Qur’an" disabled={disabled} onClick={() => quranRef.current?.open()}>۞</Tool>
+        <Tool label="Blok teks Arab (RTL)" active={editor?.isActive("arabicBlock") || false} disabled={disabled} onClick={() => editor.chain().focus().toggleArabicBlock().run()}>ع</Tool>
         <Tool label="Kutipan" icon={QuoteIcon} active={editor?.isActive("blockquote") || false} disabled={disabled} onClick={() => editor.chain().focus().toggleBlockquote().run()} />
         <Tool label="Garis pemisah" icon={DividerHorizontalIcon} disabled={disabled} onClick={() => editor.chain().focus().setHorizontalRule().run()} />
         <span className="writing-tool-divider" />
@@ -279,7 +291,7 @@ export default function ArticleEditor({ article, initialContent, unsupportedHtml
     </div>
     <div className="writing-canvas">
       {pasteNotice && <p className="writing-notice" role="status">{pasteNotice} <button type="button" onClick={() => setPasteNotice("")}>Tutup</button></p>}
-      {!unsupportedHtml && <EditorPolish editor={editor} slash={slash} slashControls={slashControls} onMedia={openMedia} onLink={openLink} disabled={disabled} />}
+      {!unsupportedHtml && <EditorPolish editor={editor} slash={slash} slashControls={slashControls} onMedia={openMedia} onQuran={() => quranRef.current?.open()} onLink={openLink} disabled={disabled} />}
       {!schemaReady && <p className="writing-notice">Penyimpanan ke server belum tersedia. Anda bisa mencoba editor dan mengunduh salinan tulisan.</p>}
       {!canEdit && !unsupportedHtml && <p className="writing-notice">Artikel ini hanya dapat dibaca karena statusnya {ARTICLE_STATUSES[status]?.toLowerCase() || status}.</p>}
       {error && <p className="writing-notice writing-notice-error" role="alert">{error} <button type="button" onClick={download}>Unduh salinan</button></p>}
@@ -296,8 +308,10 @@ export default function ArticleEditor({ article, initialContent, unsupportedHtml
         <label>Topik<input value={fields.topic} maxLength={200} disabled={!editable || publishing} onChange={(event) => fieldChanged("topic", event.target.value)} /></label>
         <label>Tag<input value={fields.tags} maxLength={1000} placeholder="Pisahkan dengan koma" disabled={!editable || publishing} onChange={(event) => fieldChanged("tags", event.target.value)} /></label>
       </div></details>
-      {articleId && <ArticleWorkflow article={{ ...article, id: articleId }} admin={admin} status={status} ready={schemaReady && article.workflowReady} schedulerReady={article.schedulerReady} getVersion={() => versionRef.current} beforeAction={prepareWorkflow} onBusyChange={setPublishing} onChanged={(result) => { versionRef.current = result.version; setStatus(result.status); updateToolbar((value) => value+1); router.refresh(); }} />}
+      {articleId && <ArticleWorkflow article={{ ...article, id: articleId }} admin={admin} status={status} ready={schemaReady && article.workflowReady} schedulerReady={article.schedulerReady} getVersion={() => versionRef.current} beforeAction={prepareWorkflow} onBusyChange={setPublishing} onChanged={(result) => { if (result.restored) { window.location.reload(); return; } versionRef.current = result.version; setStatus(result.status); updateToolbar((value) => value+1); router.refresh(); }} />}
       {unsupportedHtml != null ? <><p className="writing-notice">Artikel ini memakai blok khusus yang belum didukung editor MVP. Isi ditampilkan sebagai preview agar format aslinya tetap utuh.</p><div className="writing-prose" dangerouslySetInnerHTML={{ __html: unsupportedHtml }} /></> : editor ? <EditorContent editor={editor} /> : <p className="writing-editor-loading" role="status">Menyiapkan editor…</p>}
+      {!unsupportedHtml && <ArticleQuranPicker ref={quranRef} editor={editor} disabled={disabled} />}
+      {!unsupportedHtml && <ArticleFootnotes ref={footnotesRef} editor={editor} disabled={disabled} />}
       <p className="writing-hint">Ketik <kbd>/</kbd> di awal paragraf untuk memilih blok. <kbd>Ctrl/Cmd+S</kbd> untuk menyimpan. Gunakan <kbd>**teks**</kbd> untuk tebal, <kbd>##</kbd> untuk heading, atau <kbd>-</kbd> untuk daftar.</p>
     </div>
     <footer className="writing-footer"><span>{words.toLocaleString("id-ID")} kata<span className="writing-footer-dot">·</span>{characters.toLocaleString("id-ID")} karakter<span className="writing-footer-dot">·</span>{Math.max(1, Math.ceil(words / 200))} menit baca</span><span>{saveLabel}</span></footer>

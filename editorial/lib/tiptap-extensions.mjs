@@ -3,6 +3,9 @@ import TextAlign from "@tiptap/extension-text-align";
 import Placeholder from "@tiptap/extension-placeholder";
 import CharacterCount from "@tiptap/extension-character-count";
 import { mediaExtensions } from "./tiptap-media.mjs";
+import { Footnote } from "./tiptap-footnotes.mjs";
+
+import { ArabicBlock } from "./tiptap-arabic.mjs";
 
 export function articleEditorExtensions() {
   return [
@@ -10,6 +13,8 @@ export function articleEditorExtensions() {
     TextAlign.configure({ types: ["heading", "paragraph"] }),
     Placeholder.configure({ placeholder: "Mulai menulis cerita Anda…" }),
     CharacterCount,
+    Footnote,
+    ArabicBlock,
     ...mediaExtensions(),
   ];
 }

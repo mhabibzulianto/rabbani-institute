@@ -1,0 +1,27 @@
+{
+  "verse_key": "1:1",
+  "verse_number": 1,
+  "text_uthmani": "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ",
+  "words": [
+    {
+      "position": 1,
+      "char_type_name": "word",
+      "text_uthmani": "بِسْمِ"
+    },
+    {
+      "position": 2,
+      "char_type_name": "word",
+      "text_uthmani": "ٱللَّهِ"
+    },
+    {
+      "position": 3,
+      "char_type_name": "word",
+      "text_uthmani": "ٱلرَّحْمَـٰنِ"
+    },
+    {
+      "position": 4,
+      "char_type_name": "word",
+      "text_uthmani": "ٱلرَّحِيمِ"
+    }
+  ]
+}
