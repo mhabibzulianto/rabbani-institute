@@ -49,6 +49,7 @@ export async function updateAccountProfile(formData) {
   }
 
   revalidatePath("/profile");
+  revalidatePath("/account/profile");
   redirect("/profile?message=Profil berhasil diperbarui.");
 }
 
@@ -88,6 +89,7 @@ export async function saveAccountAddress(formData) {
   }
 
   revalidatePath("/addresses");
+  revalidatePath("/account/addresses");
   redirect("/addresses?message=Alamat berhasil disimpan.");
 }
 
@@ -117,6 +119,7 @@ export async function deleteAccountAddress(formData) {
   }
 
   revalidatePath("/addresses");
+  revalidatePath("/account/addresses");
   redirect("/addresses?message=Alamat berhasil dihapus.");
 }
 
