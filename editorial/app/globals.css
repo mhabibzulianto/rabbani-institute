@@ -879,7 +879,7 @@ p.page-badge {
   margin: 0 0 18px;
   font-size: clamp(3rem, 5vw, 4.7rem);
   line-height: 0.98;
-  max-width: 9ch;
+  max-width: 12ch;
 }
 
 .editorial-auth-copy p {
