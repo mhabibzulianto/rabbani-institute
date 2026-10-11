@@ -9,6 +9,16 @@ const nextConfig = {
   async redirects() {
     return [
       {
+        source: "/maktabah",
+        destination: "https://maktabah.rabbaniinstitute.id",
+        permanent: true,
+      },
+      {
+        source: "/maktabah/:path*",
+        destination: "https://maktabah.rabbaniinstitute.id/:path*",
+        permanent: true,
+      },
+      {
         source: "/account/profile",
         destination: "/profile",
         permanent: true,
