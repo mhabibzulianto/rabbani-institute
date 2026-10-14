@@ -73,6 +73,7 @@ const platformLinks = [
   { label: "Kelas", href: platformUrls.classesHome },
   { label: "Ujian", href: "/exams" },
   { label: "Artikel", href: platformUrls.articleHome },
+  { label: "Pedoman Transliterasi", href: "/pedoman-transliterasi" },
   { label: "FAQ", href: "/faq" },
 ];
 

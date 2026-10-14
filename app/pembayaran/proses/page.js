@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import Image from "next/image";
 
 function ProsesPembayaranContent() {
   const searchParams = useSearchParams();
@@ -133,7 +134,16 @@ function ProsesPembayaranContent() {
       {deviceType === "desktop" && qrCodeUrl ? (
         <div className="flex flex-col items-center space-y-4">
           <div className="bg-white p-3 rounded-xl border border-border/50 shadow-sm max-w-[240px]">
-            <img src={qrCodeUrl} alt="QRIS Code" className="w-full h-auto aspect-square object-contain" />
+            {/* QR transaksi harus dimuat langsung, tanpa optimasi atau cache gambar Next.js. */}
+            <Image
+              src={qrCodeUrl}
+              alt="Kode QRIS untuk pembayaran tagihan ini"
+              width={216}
+              height={216}
+              unoptimized
+              loading="eager"
+              className="w-full h-auto aspect-square object-contain"
+            />
           </div>
           <p className="text-xs text-center text-muted-foreground leading-relaxed">
             Pindai QR Code di atas menggunakan aplikasi <strong>Gojek, GoPay, OVO, DANA, LinkAja, atau Mobile Banking</strong> Anda untuk membayar.
@@ -167,7 +177,15 @@ function ProsesPembayaranContent() {
               Jika aplikasi GoPay tidak terbuka otomatis, simpan tangkapan layar (screenshot) QR Code ini, lalu unggah di menu scan aplikasi pembayaran Anda.
               <div className="mt-3 flex justify-center">
                 <div className="bg-white p-2 rounded-lg border border-border/50 max-w-[150px]">
-                  <img src={qrCodeUrl} alt="Alternative QRIS" className="w-full h-auto" />
+                  <Image
+                    src={qrCodeUrl}
+                    alt="Kode QRIS alternatif untuk pembayaran tagihan ini"
+                    width={134}
+                    height={134}
+                    unoptimized
+                    loading="eager"
+                    className="w-full h-auto"
+                  />
                 </div>
               </div>
             </li>
