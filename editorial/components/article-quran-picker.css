@@ -25,7 +25,7 @@
 .writing-quran-words button.is-selected { background: #e4f2f5; border-color: #7babb8; }
 .writing-quran-words button:disabled { opacity: .75; cursor: default; }
 .writing-quran-preview { background: #f7f9fb; border: 1px solid #dce4e9; border-radius: 12px; padding: 16px; margin-top: 20px; }
-.writing-quran-preview [dir=rtl] { text-align: right; font-size: 1.5rem; line-height: 2.1; overflow-wrap: anywhere; }
+.writing-quran-preview [dir=rtl] { text-align: right; font-family: "UthmanTaha", "Noto Naskh Arabic", serif; font-size: 1.75rem; line-height: 2.1; overflow-wrap: anywhere; }
 .writing-quran-preview [dir=rtl] p { margin: 12px 0; }
 .writing-quran-reference { font-size: .85rem; margin-bottom: 0; }
 .writing-quran-dialog button:focus-visible, .writing-quran-dialog input:focus-visible, .writing-quran-dialog select:focus-visible { outline: 2px solid #20738b; outline-offset: 2px; }

@@ -1,4 +1,5 @@
 import sanitizeHtml from "sanitize-html";
+import { youtubeEmbedUrl } from "../../packages/article-youtube/index.mjs";
 import { articleListHref, normalizeArticleFilters } from "./article-list.mjs";
 import { footnoteHtml, validFootnoteId, validFootnoteText } from "../../packages/article-footnotes/index.mjs";
 
@@ -16,22 +17,25 @@ export function previewReturnHref(value) {
 }
 
 const sanitizerOptions = {
-  allowedTags: ["p", "br", "h1", "h2", "h3", "h4", "h5", "h6", "strong", "b", "em", "i", "u", "s", "del", "sub", "sup", "mark", "kbd", "a", "ul", "ol", "li", "blockquote", "cite", "hr", "pre", "code", "figure", "figcaption", "img", "video", "audio", "source", "div", "span", "table", "thead", "tbody", "tr", "th", "td", "section"],
+  allowedTags: ["p", "br", "h1", "h2", "h3", "h4", "h5", "h6", "strong", "b", "em", "i", "u", "s", "del", "sub", "sup", "mark", "kbd", "a", "ul", "ol", "li", "blockquote", "aside", "cite", "hr", "pre", "code", "figure", "figcaption", "img", "video", "audio", "iframe", "source", "div", "span", "table", "thead", "tbody", "tr", "th", "td", "section"],
   allowedAttributes: {
     "*": ["dir", "lang", "class", "id", "style"],
     a: ["href", "title", "target", "rel"],
     img: ["src", "alt", "title", "width", "height", "loading"],
     video: ["src", "controls", "preload"], audio: ["src", "controls", "preload"],
+    iframe: ["src", "title", "loading", "allow", "allowfullscreen", "referrerpolicy"],
     source: ["src", "type"], td: ["colspan", "rowspan"], th: ["colspan", "rowspan", "scope"],
     ol: ["start"],
     figure: ["data-media", "data-filename"],
   },
-  allowedClasses: { "*": ["preview-columns", "preview-columns-three", "preview-column", "preview-arabic", "preview-quran", "preview-footnotes"] },
+  allowedClasses: { "*": ["preview-columns", "preview-columns-three", "preview-column", "preview-arabic", "preview-quran", "preview-pull-quote", "preview-marginalia", "preview-footnotes", "preview-youtube"] },
   allowedStyles: { "*": { "text-align": [/^(left|right|center|justify)$/] } },
   allowedSchemes: ["http", "https", "mailto"],
   allowedSchemesByTag: { img: ["http", "https"], video: ["http", "https"], audio: ["http", "https"], source: ["http", "https"] },
   allowProtocolRelative: false,
+  exclusiveFilter: frame => frame.tag === "iframe" && !youtubeEmbedUrl(frame.attribs.src),
   transformTags: {
+    iframe: (tagName, attrs) => ({ tagName, attribs: { src: youtubeEmbedUrl(attrs.src) || "", title: "Video YouTube", loading: "lazy", allow: "encrypted-media; picture-in-picture; fullscreen", allowfullscreen: "", referrerpolicy: "strict-origin-when-cross-origin" } }),
     a: (tagName, attrs) => ({ tagName, attribs: { ...attrs, target: attrs.href?.startsWith("#") ? "_self" : "_blank", rel: "noopener noreferrer" } }),
     img: (tagName, attrs) => ({ tagName, attribs: { ...attrs, loading: "lazy", alt: attrs.alt || "" } }),
   },
@@ -81,6 +85,9 @@ export function getArticlePreview(article) {
       case "horizontalRule": case "hr": return "<hr />";
       case "blockquote": return `<blockquote>${children}</blockquote>`;
       case "arabicBlock": case "arabic-text": return `<div class="preview-arabic" dir="rtl" lang="ar">${children}</div>`;
+      case "quranBlock": return `<div class="preview-quran" dir="rtl" lang="ar">${children}</div>`;
+      case "pullQuote": case "pull-quote": return `<blockquote class="preview-pull-quote">${children}</blockquote>`;
+      case "marginalia": return `<aside class="preview-marginalia">${children}</aside>`;
       case "ayah-quote": case "arabic-quote": return `<blockquote class="${node.type === "ayah-quote" ? "preview-quran" : "preview-arabic"}" dir="rtl" lang="ar">${children}</blockquote>`;
       case "bulletList": case "ul": return `<ul>${children}</ul>`;
       case "orderedList": case "ol": return `<ol start="${Math.max(1, Number(attrs.start) || 1)}">${children}</ol>`;
@@ -93,6 +100,7 @@ export function getArticlePreview(article) {
       case "tableCell": case "table-cell": return `<td>${children}</td>`;
       case "tableHeader": return `<th scope="col">${children}</th>`;
       case "image": return `<figure><img src="${escape(attrs.src)}" alt="${escape(attrs.alt || "")}" />${attrs.caption || attrs.filename ? `<figcaption>${escape(attrs.caption || attrs.filename)}</figcaption>` : ""}</figure>`;
+      case "youtube": { const src = youtubeEmbedUrl(attrs.src); return src ? `<figure class="preview-youtube"><iframe src="${escape(src)}" title="Video YouTube" loading="lazy" allowfullscreen></iframe></figure>` : ""; }
       case "video": case "audio": return `<figure><${node.type} controls preload="metadata" src="${escape(attrs.src)}"></${node.type}>${attrs.caption || attrs.filename ? `<figcaption>${escape(attrs.caption || attrs.filename)}</figcaption>` : ""}</figure>`;
       case "document": return `<figure><a href="${escape(attrs.src)}">${escape(attrs.filename || "Buka dokumen")}</a>${attrs.caption ? `<figcaption>${escape(attrs.caption)}</figcaption>` : ""}</figure>`;
       case "paragraph": case "p": return `<p${align}>${children}</p>`;
@@ -140,7 +148,7 @@ export function getArticlePreview(article) {
   const html = sanitizeArticleHtml(raw);
   const plain = sanitizeHtml(html, { allowedTags: [], allowedAttributes: {} }).trim();
   return {
-    html, hasContent: Boolean(plain || /<(img|video|audio|hr)\b/.test(html)),
+    html, hasContent: Boolean(plain || /<(img|video|audio|iframe|hr)\b/.test(html)),
     coverHtml: article.cover_image_url ? sanitizeArticleHtml(`<img src="${escape(article.cover_image_url)}" alt="${escape(article.title)}" />`) : "",
   };
 }

@@ -1,3 +1,9 @@
+@font-face {
+  font-family: "UthmanTaha";
+  src: url("/fonts/UthmanTaha.ttf") format("truetype");
+  font-display: swap;
+}
+
 :root {
   --bg: #eff4f8;
   --surface: #ffffff;
@@ -1148,6 +1154,10 @@ p.page-badge {
 .article-preview-prose li { padding-inline-start: 0.25em; margin: 0.5em 0; }
 .article-preview-prose a { color: var(--primary); text-decoration: underline; text-underline-offset: 3px; }
 .article-preview-prose blockquote { margin: 28px 0; padding: 20px 24px; border-inline-start: 3px solid var(--primary); background: var(--surface-muted); }
+.article-preview-prose .preview-pull-quote { width: calc(100% + 64px); margin: 36px -32px; padding: 24px 28px; border: 1px solid var(--border); border-inline-width: 0; background: transparent; color: var(--text); font-size: 1.35rem; font-weight: 700; line-height: 1.55; }
+.article-preview-prose .preview-pull-quote p { margin: 0; }
+.article-preview-prose .preview-marginalia { width: min(230px, 42%); margin: 20px -28px 24px auto; padding-inline-start: 14px; border-inline-start: 2px solid #9ab6c1; color: var(--muted); font-size: 0.78rem; line-height: 1.65; }
+.article-preview-prose .preview-marginalia p { margin: 0; }
 .article-preview-prose :is(.preview-arabic, .preview-quran) { font-size: 1.6rem; line-height: 2; text-align: right; }
 .article-preview-prose figure { margin: 24px 0; }
 .article-preview-prose img { max-width: 100%; height: auto; border-radius: 8px; }
@@ -1177,7 +1187,15 @@ p.page-badge {
 .writing-publish:hover { background: #444; }
 .writing-workspace button:disabled, .writing-workspace select:disabled { opacity: 0.4; cursor: not-allowed; }
 .writing-toolbar { position: sticky; top: 70px; z-index: 9; padding: 10px 24px; border-bottom: 1px solid var(--writing-border); background: #fbfbfa; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.writing-toolbar-tools { display: flex; align-items: center; gap: 2px; min-width: 0; overflow-x: auto; scrollbar-width: thin; }
+.writing-toolbar-viewport { position: relative; flex: 1; min-width: 0; width: 100%; }
+.writing-toolbar-tools { min-width: 0; overflow-x: auto; scrollbar-width: thin; overscroll-behavior-x: contain; }
+.writing-toolbar-track { position: relative; display: flex; align-items: center; gap: 2px; width: max-content; min-width: 100%; }
+.writing-toolbar-scroll { position: absolute; top: 0; bottom: 0; z-index: 1; display: flex; align-items: center; width: 44px; padding: 0; border: 0; color: var(--writing-text); cursor: pointer; }
+.writing-toolbar-scroll-left { left: 0; justify-content: flex-start; padding-left: 2px; background: linear-gradient(to right, #fbfbfa 52%, #fbfbfa00); }
+.writing-toolbar-scroll-right { right: 0; justify-content: flex-end; padding-right: 2px; background: linear-gradient(to left, #fbfbfa 52%, #fbfbfa00); }
+.writing-toolbar-scroll svg { width: 24px; height: 24px; padding: 2px; border: 1px solid #dededb; border-radius: 50%; background: #fbfbfa; }
+.writing-toolbar-scroll:hover svg { background: #e9e8e5; }
+.writing-toolbar-scroll:focus-visible { outline: 2px solid #8caebf; outline-offset: -2px; border-radius: 4px; }
 .writing-toolbar-tools select { border: 0; background: transparent; color: var(--writing-text); font-size: 0.78rem; width: 115px; flex-shrink: 0; padding: 8px 4px; }
 .writing-tool { width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; border: 0; background: transparent; color: #555; border-radius: 4px; font-size: 0.85rem; cursor: pointer; }
 .writing-tool svg { width: 17px; height: 17px; }
@@ -1202,6 +1220,17 @@ p.page-badge {
 .writing-properties label { display: grid; gap: 6px; }
 .writing-properties label:last-child { grid-column: 1 / -1; }
 .writing-properties :is(input, select), .writing-dialog input { width: 100%; min-width: 0; border: 1px solid #dededb; border-radius: 5px; background: #fff; padding: 10px; color: var(--writing-text); font: inherit; }
+.writing-tag-input { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; min-height: 40px; padding: 5px 8px; border: 1px solid #dededb; border-radius: 5px; background: #fff; cursor: text; }
+.writing-tag-input:focus-within { outline: 2px solid #8caebf; outline-offset: 3px; }
+.writing-tag-input.is-disabled { background: #f5f5f3; cursor: default; }
+.writing-properties .writing-tag-input input { flex: 1 1 145px; width: auto; min-width: 120px; border: 0; outline: 0; padding: 4px 2px; background: transparent; }
+.writing-workspace .writing-tag-input input:focus-visible { outline: none; }
+.writing-tag-pill { display: inline-flex; align-items: center; gap: 3px; max-width: 100%; padding: 4px 5px 4px 9px; border: 1px solid #d8e2e6; border-radius: 999px; background: #edf3f5; color: #354f5b; line-height: 1.25; }
+.writing-tag-pill > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.writing-tag-pill button { display: inline-grid; place-items: center; width: 20px; height: 20px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: #68808a; cursor: pointer; }
+.writing-tag-pill button:hover { background: #dce8ec; color: #263b44; }
+.writing-tag-pill svg { width: 12px; height: 12px; }
+.writing-tag-count { margin-left: auto; color: #9a9995; font-size: 0.68rem; }
 .writing-prose { min-height: 380px; outline: none; font-size: 1.05rem; line-height: 1.85; overflow-wrap: anywhere; }
 .writing-prose > :first-child { margin-top: 0; }
 .writing-prose p { margin: 0 0 1.15em; }
@@ -1213,16 +1242,24 @@ p.page-badge {
 .writing-prose li { margin: 0.25em 0; }
 .writing-prose li > p { margin: 0; }
 .writing-prose blockquote { border-inline-start: 3px solid #c4c3bf; margin: 1.6em 0; padding-inline-start: 22px; color: #666; }
+.writing-prose .writing-pull-quote { width: calc(100% + 96px); margin: 2.6rem -48px; padding: 26px 32px; border: 1px solid #dce2e4; border-inline-width: 0; color: #26383f; font-size: clamp(1.28rem, 2.4vw, 1.65rem); font-weight: 600; line-height: 1.5; letter-spacing: -0.02em; }
+.writing-prose .writing-pull-quote p { margin: 0; }
+.writing-prose .writing-marginalia { width: min(260px, 42%); margin: 1rem -48px 1.75rem auto; padding: 4px 0 4px 16px; border-inline-start: 2px solid #9ab6c1; color: #64747b; font-size: 0.82rem; line-height: 1.65; }
+.writing-prose .writing-marginalia p { margin: 0; }
 .writing-prose blockquote p:last-child { margin-bottom: 0; }
 .writing-prose a { color: #466c81; text-decoration: underline; text-underline-offset: 4px; }
 .writing-prose code { background: #f3f2ef; padding: 3px 5px; border-radius: 3px; font-size: 0.88em; }
 .writing-prose hr { border: 0; border-top: 1px solid #e3e2df; margin: 2em 0; }
 .writing-prose p.is-editor-empty:first-child::before { content: attr(data-placeholder); float: left; height: 0; pointer-events: none; color: #b2b1ae; }
+.writing-honorific-suggestion { color: #9aa5aa; opacity: 0.78; pointer-events: none; white-space: pre; }
+.writing-honorific-suggestion > span { margin-inline-start: 5px; padding: 2px 5px; border: 1px solid #d9dedd; border-radius: 4px; color: #8b9294; font: 600 0.62rem/1.2 "SF Mono", Consolas, monospace; vertical-align: middle; }
 .writing-prose .ProseMirror-selectednode { outline: 2px solid #b6ccd6; }
 .writing-prose img { max-width: 100%; height: auto; }
+.writing-prose .writing-youtube, .preview-youtube { margin: 24px 0; width: 100%; }
+.writing-youtube iframe, .preview-youtube iframe { display: block; width: 100%; aspect-ratio: 16 / 9; height: auto; border: 0; border-radius: 8px; background: #171717; }
 .writing-hint { color: #a1a09c; font-size: 0.72rem; margin-top: 45px; line-height: 1.8; }
 .writing-hint kbd { font-family: "SF Mono", Consolas, monospace; font-size: 0.7rem; border: 1px solid #eaeaea; padding: 1px 4px; border-radius: 3px; }
-.writing-footer { position: fixed; inset: auto 0 0; z-index: 8; min-height: 46px; display: flex; justify-content: space-between; align-items: center; gap: 12px; border-top: 1px solid var(--writing-border); background: #fbfbfa; padding: 12px 30px max(12px, env(safe-area-inset-bottom)); font-size: 0.72rem; color: var(--writing-muted); }
+.writing-footer { position: fixed; inset: auto 0 0; z-index: 8; min-height: 46px; display: flex; justify-content: space-between; align-items: center; gap: 12px; border-top: 1px solid var(--writing-border); background: #fbfbfa; padding: 12px 30px max(12px, env(safe-area-inset-bottom)); font-size: 0.72rem; color: var(--writing-muted); transform: translateY(var(--writing-keyboard-inset, 0px)); }
 .writing-footer-dot { margin: 0 10px; color: #c2c1bd; }
 .writing-notice { background: #f7f6f3; border: 1px solid #eae8e3; border-radius: 5px; padding: 12px 15px; font-size: 0.78rem; color: #6e6b64; line-height: 1.7; margin: 0 0 26px; }
 .writing-notice button { border: 0; background: transparent; color: #2f3437; text-decoration: underline; cursor: pointer; font-size: inherit; padding: 3px 6px; }
@@ -1271,14 +1308,14 @@ p.page-badge {
   .writing-brand { font-size: 0.82rem; gap: 6px; }
   .writing-brand-mark { width: 22px; height: 22px; }
   .writing-header > .writing-publish { font-size: 0.73rem; padding: 9px 12px; }
-  .writing-toolbar { top: 62px; padding: 8px 14px; display: block; }
-  .writing-toolbar-tools { padding-bottom: 4px; }
-  .writing-save-actions { justify-content: flex-end; border-top: 1px solid #eaeaea; padding-top: 5px; margin-top: 4px; }
-  .writing-save-actions > span { display: inline; margin-right: auto; }
-  .writing-canvas { padding: 30px 22px 60px; }
+  .writing-toolbar { position: fixed; inset: auto 0 36px; top: auto; z-index: 9; min-height: 54px; padding: 5px 10px; display: block; transform: translateY(var(--writing-keyboard-inset, 0px)); }
+  .writing-toolbar-tools { padding: 0; scrollbar-width: none; }
+  .writing-toolbar-tools::-webkit-scrollbar { display: none; }
+  .writing-canvas { padding: 30px 22px 116px; }
   .writing-title { font-size: 2rem; }
   .writing-prose { font-size: 1rem; }
-  .writing-footer { padding-left: 16px; padding-right: 16px; font-size: 0.65rem; flex-wrap: wrap; gap: 6px; }
+  .writing-footer { min-height: 36px; padding: 7px 14px; font-size: 0.65rem; flex-wrap: nowrap; gap: 8px; }
+  .writing-footer > span { white-space: nowrap; }
   .writing-footer-dot { margin: 0 6px; }
   .writing-properties > div { grid-template-columns: 1fr; }
 }
@@ -1286,6 +1323,9 @@ p.page-badge {
 .writing-cover { margin-bottom: 22px; }
 .writing-header-actions { display: flex; align-items: center; justify-self: end; gap: 10px; }
 .writing-preview-button { border: 0; background: transparent; color: #666; padding: 10px; cursor: pointer; font-size: 0.8rem; }
+.writing-header-save { display: grid; place-items: center; width: 38px; height: 38px; padding: 0; border: 1px solid #dededb; border-radius: 5px; background: #fff; color: #555; cursor: pointer; }
+.writing-header-save svg { width: 17px; height: 17px; }
+.writing-header-save:not(:disabled):hover { background: #f3f2ef; color: #2f3437; }
 .writing-workflow { margin: 0 0 32px; padding: 16px 0; border-bottom: 1px solid #ececec; }
 .writing-workflow summary { color: #777; cursor: pointer; font-size: 0.82rem; }
 .writing-workflow-content { display: grid; gap: 18px; padding-top: 18px; font-size: 0.86rem; }
@@ -1333,6 +1373,7 @@ p.page-badge {
 .publication-empty { padding: 60px 24px; text-align: center; color: #7d878c; }
 @media (max-width: 720px) {
   .writing-header-actions { gap: 3px; }
+  .writing-header-save { width: 36px; height: 36px; }
   .writing-header-actions .writing-publish { font-size: 0.73rem; padding: 9px 12px; }
   .writing-preview-button { padding: 8px 4px; font-size: 0.7rem; }
   .publication-preview { padding: 28px 16px 60px; }
@@ -1415,26 +1456,36 @@ p.page-badge {
   .mobile-nav-avatar { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; color: white; font-size: 0.67rem; }
   .mobile-nav-item.is-active .mobile-nav-avatar { outline: 2px solid var(--primary); outline-offset: 2px; }
 }
-.article-preview-overlay { position: fixed; inset: 0; z-index: 50; }
+.article-preview-overlay { position: fixed; inset: 0; z-index: 50; overflow: hidden; }
 .article-preview-backdrop { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: rgb(15 30 48 / 18%); cursor: default; }
-.article-preview-drawer { position: absolute; inset: 0 0 0 auto; width: min(620px, 48vw); background: var(--surface); box-shadow: -16px 0 50px rgb(15 30 48 / 15%); display: flex; flex-direction: column; }
+.article-preview-drawer { position: absolute; inset: 0 0 0 auto; width: min(620px, 48vw); max-width: 100vw; min-width: 0; background: var(--surface); box-shadow: -16px 0 50px rgb(15 30 48 / 15%); display: flex; flex-direction: column; overflow: hidden; }
 .article-preview-loading { display: grid; gap: 20px; padding: 24px; }
 .article-preview-loading > p { color: var(--muted); font-size: 0.85rem; margin: 0; }
 .article-preview-loading-meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .article-preview-drawer > .article-preview-toolbar { flex-direction: column; align-items: stretch; gap: 12px; flex-shrink: 0; padding: 16px 24px; border-bottom: 1px solid var(--border); background: var(--surface); }
-.article-preview-drawer-content { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.article-preview-drawer-content { flex: 1; width: 100%; min-width: 0; min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; }
+.article-preview-drawer :is(.article-preview-layout, .article-preview-metadata, .article-preview-paper, .article-preview-prose) { min-width: 0; max-width: 100%; }
+.article-preview-drawer .article-preview-prose :is(a, code, pre, td, th) { overflow-wrap: anywhere; word-break: break-word; }
+.article-preview-drawer .article-preview-prose :is(img, video, audio, iframe, embed, object) { max-width: 100%; }
+.article-preview-drawer .article-preview-prose :is(.preview-pull-quote, .preview-marginalia) { width: 100%; margin-inline: 0; }
 .article-preview-drawer :is(a, button):focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
 .article-preview-drawer .article-inline-notice, .article-preview-drawer-content > .article-preview-no-content { margin: 24px; }
 @media (max-width: 720px) {
-  .article-preview-drawer { width: 100%; }
+  .article-preview-drawer { width: 100vw; height: 100dvh; }
   .article-preview-layout { grid-template-columns: minmax(0, 1fr); }
   .article-preview-metadata { position: static; min-height: 0; padding: 20px; }
   .article-preview-metadata dl { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-  .article-preview-paper { min-height: 0; padding: 24px 20px; }
+  .article-preview-paper { width: 100%; min-height: 0; padding: 24px 20px; overflow: hidden; }
   .article-preview-toolbar { position: sticky; top: 0; background: var(--bg); z-index: 2; padding: 10px 0; }
   .article-preview-heading h1 { font-size: 1.8rem; }
   .article-preview-prose { font-size: 0.95rem; }
+  .article-preview-prose table { table-layout: fixed; }
+  .article-preview-prose blockquote { margin-inline: 0; padding: 16px; }
   .preview-columns, .preview-columns-three { grid-template-columns: minmax(0, 1fr); }
+  .writing-prose .writing-pull-quote, .writing-prose .writing-marginalia,
+  .article-preview-prose :is(.preview-pull-quote, .preview-marginalia) { width: 100%; margin-inline: 0; }
+  .writing-prose .writing-pull-quote, .article-preview-prose .preview-pull-quote { padding-inline: 18px; }
+  .writing-prose .writing-marginalia, .article-preview-prose .preview-marginalia { padding-inline-start: 12px; }
 }
 
 /* Arabic text blocks retain their direction across editing and preview. */
@@ -1451,3 +1502,15 @@ p.page-badge {
 :is(.article-preview-prose, .publication-prose) div.preview-arabic :is(p, h2, h3, h4, li) { text-align: right !important; }
 .writing-prose .writing-arabic-block :is(ul, ol),
 :is(.article-preview-prose, .publication-prose) div.preview-arabic :is(ul, ol) { padding-left: 0; padding-right: 1.5em; }
+.writing-prose .writing-quran-block,
+:is(.article-preview-prose, .publication-prose) :is(div.preview-quran, blockquote.preview-quran) {
+  direction: rtl;
+  text-align: right;
+  font-family: "UthmanTaha", "Noto Naskh Arabic", serif;
+  font-size: 1.75rem;
+  line-height: 2.1;
+  margin-block: 1.25rem;
+  overflow-wrap: anywhere;
+}
+.writing-prose .writing-quran-block :is(p, h2, h3, h4, li),
+:is(.article-preview-prose, .publication-prose) :is(div.preview-quran, blockquote.preview-quran) :is(p, h2, h3, h4, li) { text-align: right !important; }

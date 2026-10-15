@@ -1,0 +1,29 @@
+"use client";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { ChevronLeft, ChevronRight, CalendarDays, RefreshCw } from "lucide-react";
+import { ArticlePreviewLink } from "./ArticlePreviewWorkspace";
+import { REPORT_TYPES, monthCells, shiftMonth, selectedReportDay } from "@/lib/report-calendar.mjs";
+import { ARTICLE_STATUSES } from "@/lib/article-list.mjs";
+import "./report-calendar.css";
+const dayLabel = day => new Intl.DateTimeFormat("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Jakarta" }).format(new Date(day + "T12:00:00+07:00"));
+const timeLabel = timestamp => new Intl.DateTimeFormat("id-ID", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta" }).format(new Date(timestamp));
+export default function ReportCalendar({ report, initialDay }) {
+  const router = useRouter(), [pending, startTransition] = useTransition();
+  const [selected, setSelected] = useState(() => selectedReportDay(initialDay, report.month, report.today));
+  const events = report.events, daily = events.filter(event => event.day === selected);
+  function move(month) { startTransition(() => router.replace("/beranda?month=" + month, { scroll: false })); }
+  const totals = Object.fromEntries(Object.keys(REPORT_TYPES).map(kind => [kind, events.filter(event => event.kind === kind).length]));
+  return <section className="report-calendar" aria-labelledby="report-calendar-heading" aria-busy={pending}>
+    <header className="report-calendar-header"><div><h2 id="report-calendar-heading"><CalendarDays size={21} aria-hidden="true" />Kalender laporan</h2><p>{report.admin ? "Aktivitas artikel seluruh penulis" : "Aktivitas artikel Anda"} · WIB</p></div><div className="report-calendar-nav"><button type="button" aria-label="Bulan sebelumnya" className="secondary-button" disabled={pending || report.month === "2000-01"} onClick={() => move(shiftMonth(report.month, -1))}><ChevronLeft size={18} /></button><h3>{new Intl.DateTimeFormat("id-ID", { month: "long", year: "numeric", timeZone: "Asia/Jakarta" }).format(new Date(report.month + "-01T12:00:00+07:00"))}</h3><button type="button" aria-label="Bulan berikutnya" className="secondary-button" disabled={pending || report.month === "2199-12"} onClick={() => move(shiftMonth(report.month, 1))}><ChevronRight size={18} /></button><button type="button" className="secondary-button" disabled={pending} onClick={() => { if (report.month === report.today.slice(0,7)) setSelected(report.today); else move(report.today.slice(0,7)); }}>Hari ini</button></div></header>
+    <div className="report-calendar-legend" aria-label="Legenda warna">{Object.entries(REPORT_TYPES).map(([kind,label]) => <span key={kind}><i className={"report-dot report-" + kind} aria-hidden="true" />{label}<strong>{totals[kind]}</strong></span>)}</div>
+    <p className="report-calendar-note">Angka menunjukkan jumlah aktivitas pada tanggal tersebut. Pengajuan ulang dihitung sebagai aktivitas baru; jadwal menampilkan rencana yang masih aktif.</p>
+    {pending && <p role="status" className="report-calendar-note">Memuat laporan bulan…</p>}
+    {report.notices.length > 0 && <div className="report-calendar-warning" role="alert">{report.notices.map(note => <p key={note}>{note}</p>)}<button type="button" className="secondary-button" disabled={pending} onClick={() => startTransition(() => router.refresh())}><RefreshCw size={15} />Muat ulang laporan</button></div>}
+    <div className="report-calendar-layout"><div className="report-month"><div className="report-weekdays" aria-hidden="true">{["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"].map(day => <span key={day}>{day}</span>)}</div><div className="report-days">{monthCells(report.month).map(cell => {
+      const counts = Object.keys(REPORT_TYPES).map(kind => [kind, events.filter(event => event.day === cell.day && event.kind === kind).length]).filter(([,count]) => count);
+      return <button type="button" key={cell.day} disabled={!cell.current || pending} className={"report-day" + (cell.day === selected ? " is-selected" : "") + (cell.day === report.today ? " is-today" : "")} aria-pressed={cell.current ? cell.day === selected : undefined} aria-current={cell.day === report.today ? "date" : undefined} aria-label={dayLabel(cell.day) + (counts.length ? ", " + counts.map(([kind,count]) => count + " " + REPORT_TYPES[kind].toLowerCase()).join(", ") : ", tidak ada aktivitas")} onClick={() => setSelected(cell.day)}><span className="report-day-number">{cell.number}</span><span className="report-day-counts" aria-hidden="true">{counts.map(([kind,count]) => <span key={kind} className={"report-count report-" + kind}><i />{count}</span>)}</span></button>;
+    })}</div></div>
+    <section className="report-daily" aria-labelledby="report-day-heading"><h3 id="report-day-heading">{dayLabel(selected)}</h3><p className="report-calendar-note" role="status">{daily.length} aktivitas artikel</p>{daily.length ? <ul>{daily.map(event => <li key={event.id}><div className="report-event-meta"><span><i className={"report-dot report-" + event.kind} aria-hidden="true" />{REPORT_TYPES[event.kind]}</span><time dateTime={event.timestamp}>{timeLabel(event.timestamp)} WIB</time></div><ArticlePreviewLink articleId={event.articleId} href={"/beranda?" + new URLSearchParams({ month: report.month, day: selected, preview: event.articleId })}>{event.title}</ArticlePreviewLink><p>{event.author} · Status saat ini: {ARTICLE_STATUSES[event.status] || "—"}</p>{event.failed && <p className="report-event-failed">Publikasi terjadwal gagal; perlu ditinjau.</p>}</li>)}</ul> : <div className="report-calendar-empty"><CalendarDays size={28} aria-hidden="true" /><p>Belum ada aktivitas artikel pada tanggal ini.</p><span>Pilih tanggal lain untuk melihat laporan.</span></div>}</section></div>
+  </section>;
+}

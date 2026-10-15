@@ -116,6 +116,14 @@ halaman editor di route group `(dashboard)`. Daftar dan draft memakai kolom lega
 diuji pada mode preview lokal sebelum patch fondasi diterapkan. Membuat draft
 tetap menulis ke Supabase yang dikonfigurasi; preview bukan database mock.
 
+Pengambilan pengguna dan profil memakai `cache()` React agar layout, halaman,
+dan pembacaan artikel berbagi hasil dalam satu render server. Cache tidak
+bertahan lintas permintaan; middleware dan pemeriksaan izin tetap berjalan.
+Pemilih media, pemilih ayat, serta renderer preview publik/revisi dimuat dengan
+dynamic import ketika diperlukan. Editor inti dan catatan kaki tetap langsung
+tersedia. Posisi penyisipan ayat disimpan sejak tombol diklik, termasuk selama
+chunk pemilih ayat pertama kali dimuat.
+
 Test memakai PostgreSQL sementara dalam PGlite untuk menjalankan patch SQL,
 RLS, trigger, konflik versi, dan transisi dengan role yang berbeda. Test tidak
 menghubungi Supabase atau mengubah data pengguna. Build memerlukan environment
@@ -131,6 +139,12 @@ status penyimpanan. Toolbar mendukung heading, bold/italic/underline/strike,
 kode inline, link, bullet/numbered list, kutipan, garis pemisah, alignment,
 undo/redo, dan unduhan JSON. Metadata judul, ringkasan, kategori, topik, dan tag
 dapat diubah. Buka editor melalui tombol pada preview atau setelah membuat draft.
+
+Tombol YouTube di samping tombol media menerima link `youtube.com/watch?v=…`,
+`youtu.be/…`, Shorts, live, dan embed. Tautan disimpan sebagai URL player
+`youtube-nocookie.com` yang tervalidasi; waktu mulai dipertahankan, parameter
+tracking dan autoplay dibuang. Embed responsif tersedia di editor, preview,
+dan pembaca artikel publik. Tidak memerlukan API key atau migrasi database.
 
 Autosave artikel berjalan 10 detik setelah perubahan terakhir dan dapat dipicu dengan
 tombol Simpan atau Ctrl/Cmd+S. Request diserialkan, memakai version/status yang
@@ -385,3 +399,5 @@ Catatan berupa teks biasa hingga 4.000 karakter, maksimal 200 per artikel; URL h
 Blok teks Arab: tombol **ع** pada toolbar atau perintah slash **Teks Arab** membuat blok RTL yang selalu rata kanan. Klik tombol yang sama untuk mengembalikan paragraf terpilih ke teks biasa; **Ctrl+Enter** (Mac: **Cmd+Enter**) membuka paragraf biasa setelah blok. Format teks dan catatan kaki tetap tersedia, dan arah RTL dipertahankan di preview serta artikel publik. Tidak memerlukan patch SQL baru.
 
 Sisipkan ayat: tombol **۞** atau slash **Ayat Al-Qur’an** membuka pilihan surat (nama/nomor), satu ayat atau rentang hingga 20 ayat, dan pilihan kata awal/akhir. Teks Utsmani dan pembagian kata diambil dari API publik Quran.com melalui endpoint editorial yang memeriksa akses pengguna, tanpa API key atau terjemahan. Katalog 114 surat/6.236 ayat berasal dari https://api.quran.com/api/v4/chapters?language=id (diambil 11 Oktober 2026); teks ayat divalidasi dan di-cache harian. Potongan mempertahankan harakat/tanda waqaf sumber dan diberi penanda elipsis serta referensi potongan. Hasil adalah blok Arab biasa dan paragraf referensi yang sama-sama dapat diedit, disimpan, dan di-undo. Tidak ada node atom baru maupun patch SQL baru.
+
+Kalender laporan beranda menampilkan riwayat publikasi/pengajuan dari `article_revisions` dan jadwal aktif dari `articles.scheduled_at`. Publikasi lama tanpa snapshot memakai `published_at`; pengajuan tidak ditebak dari `updated_at`. Semua hari/jam memakai WIB. Query dibatasi bulan terpilih dan kepemilikan untuk non-admin (ditambah RLS), dengan pagination dan peringatan jika sumber gagal atau mencapai batas 5.000 catatan. Klik judul membuka drawer preview di beranda. Tidak memerlukan patch SQL baru bila workflow telah diterapkan.

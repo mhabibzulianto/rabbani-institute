@@ -2,6 +2,7 @@
 import { collectionItems } from "./collections.mjs";
 import { isSafeLandingUrl } from "./schema.mjs";
 import { landingHeadings } from "./headings.mjs";
+import { preparePublicLandingDocument } from "./public-content.mjs";
 
 function Buttons({ items = [], className = "hero-actions" }) {
   return <div className={className}>{items.filter((b) => b.href && isSafeLandingUrl(b.href)).map((b, i) => <a key={i} className={`button ${i ? "secondary" : "primary"}`} href={b.href}>{b.label}</a>)}</div>;
@@ -27,9 +28,10 @@ export function LandingRichText({ node }) {
   if (!Tag) return null;
   return <Tag {...(node.type === "orderedList" && node.attrs?.start ? { start: node.attrs.start } : {})}>{node.content?.map((n, i) => <LandingRichText key={i} node={n} />)}</Tag>;
 }
-export default function LandingRenderer({ document, pools = {}, cards = {}, paymentReady = false }) {
+export default function LandingRenderer({ document, pools = {}, cards = {}, paymentReady = false, articleCatalogUrl }) {
   let heroSeen = false;
-  return <main className="landing-page">{document.blocks.filter((b) => b.enabled).map((block) => {
+  const publicDocument = preparePublicLandingDocument(document, articleCatalogUrl);
+  return <main className="landing-page">{publicDocument.blocks.filter((b) => b.enabled).map((block) => {
     const p = block.props;
     const isHero = block.type === "hero";
     const Title = isHero && !heroSeen ? "h1" : "h2";
@@ -37,7 +39,7 @@ export default function LandingRenderer({ document, pools = {}, cards = {}, paym
     const heading = <div className={isHero ? "hero-copy hero-copy-home" : "section-heading"}>{p.label && <p className={isHero ? "eyebrow" : "section-label"}>{p.label}</p>}{p.title && <Title>{p.title}</Title>}{p.description && <p>{p.description}</p>}{isHero && <Buttons items={p.buttons} />}</div>;
     if (isHero) return <section key={block.id} id={block.id} className={`hero hero-home landing-variant-${p.variant || "default"}`}><div className={`hero-shell landing-render-split image-${p.imagePosition || "right"}`}>{heading}<Media image={p.image} priority={Title === "h1"} /></div></section>;
     let body;
-    if (block.type === "features") body = <div className="landing-feature-grid">{p.items.map((item, i) => <article className="panel landing-feature-card" key={i}><span aria-hidden="true">{({ book: "▤", graduation: "◇", shield: "⬡", sparkles: "✦", check: "✓" })[item.icon]} </span><strong>{item.systemValue === "payment-status" && paymentReady ? "Checkout aktif" : item.title}</strong><p>{item.systemValue === "payment-status" && paymentReady ? "Pembayaran kelas berbayar sudah aktif lewat Midtrans Snap." : item.description}</p></article>)}</div>;
+    if (block.type === "features") body = <div className="landing-feature-grid">{p.items.map((item, i) => <article className="panel landing-feature-card" key={i}><span aria-hidden="true">{({ book: "▤", graduation: "◇", shield: "⬡", sparkles: "✦", check: "✓" })[item.icon]} </span><strong>{item.systemValue === "payment-status" && paymentReady ? "Pembayaran kelas tersedia" : item.title}</strong><p>{item.systemValue === "payment-status" && paymentReady ? "Daftar dan bayar kelas pilihan Anda secara online." : item.description}</p></article>)}</div>;
     else if (block.type === "text") body = <div className="landing-rich-text"><LandingRichText node={landingHeadings(p.content, p.title ? 2 : 1)} /></div>;
     else if (block.type === "imageText") body = <div className={`landing-render-split image-${p.imagePosition || "right"}`}><div className="landing-rich-text"><LandingRichText node={landingHeadings(p.content, 2)} /><Buttons items={p.buttons} /></div><Media image={p.image} /></div>;
     else if (block.type === "cta") return <section key={block.id} id={block.id} className={`section landing-cta-section landing-variant-${p.variant || "default"}`}><div className="landing-cta-shell">{heading}<Buttons items={p.buttons} className="landing-cta-actions" /></div></section>;

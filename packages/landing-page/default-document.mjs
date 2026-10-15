@@ -11,12 +11,12 @@ const document = {
     block("tentang", "features", { label: "Tentang platform", title: "Ekosistem belajar yang terasa tenang dan fokus", description: "Kurikulum, evaluasi, dan bahan pendukungnya kami rapikan supaya peserta tinggal belajar dengan lebih nyaman.", items: [
       { icon: "book", title: "2 kategori utama", description: "Bahasa Arab dan Ulumul Qur'an kami susun sebagai fondasi perjalanan belajar awal." },
       { icon: "graduation", title: "2 model kelas", description: "Kelas Mandiri dan Kelas Madrasah berjalan berdampingan tanpa memecah pengalaman peserta." },
-      { icon: "shield", title: "SSO siap", description: "Pintu masuk akun bersama Rabbani siap dipakai saat dibutuhkan.", systemValue: "payment-status" },
+      { icon: "shield", title: "Satu akun untuk belajar", description: "Gunakan akun Rabbani yang sama untuk mengakses kelas dan mengelola kegiatan belajar Anda.", systemValue: "payment-status" },
     ] }),
-    block("kelas", "courses", catalog("Katalog kelas", "Kelas unggulan", "Pilih kelas, daftar, lalu simpan progress belajar langsung di Supabase.", { catalogUrl: "https://madrasah.rabbaniinstitute.id/kelas", catalogLabel: "Lihat semua kelas" })),
-    block("ujian", "exams", catalog("Modul ujian", "Ujian yang tersedia", "Akses ujian mandiri dan ujian susulan dengan OTP WhatsApp, timer, dan batas attempt yang sudah diatur.", { catalogUrl: "/exams", catalogLabel: "Lihat semua ujian", emptyMessage: "Belum ada modul ujian yang dibuka saat ini." })),
-    block("artikel", "articles", catalog("Artikel", "Tulisan terbaru", "Baca penjelasan, kutipan Arab, dan catatan pembelajaran yang melengkapi kelas-kelas di Rabbani Institute.", { catalogUrl: "https://editorial.rabbaniinstitute.id/artikel", catalogLabel: "Buka halaman artikel", emptyMessage: "Belum ada artikel yang terbit saat ini." })),
-    block("mulai", "cta", { label: "Mulai perjalanan Anda", title: "Siap memperdalam pemahaman Al-Qur'an dan Bahasa Arab?", description: "Bergabunglah dengan ribuan pelajar lainnya dan mulai perjalanan Anda dalam memahami kitab suci dengan lebih baik.", variant: "default", buttons: [{ label: "Pilih kelas", href: "https://madrasah.rabbaniinstitute.id/kelas" }, { label: "Hubungi kami", href: "/kontak" }] }),
+    block("kelas", "courses", catalog("Katalog kelas", "Kelas unggulan", "Pilih kelas, mulai belajar, dan lanjutkan dari progres terakhir Anda.", { catalogUrl: "https://madrasah.rabbaniinstitute.id/kelas", catalogLabel: "Lihat semua kelas" })),
+    block("ujian", "exams", catalog("Ujian", "Ujian yang tersedia", "Ikuti ujian mandiri dan ujian susulan dengan kode verifikasi melalui WhatsApp. Durasi dan jumlah kesempatan tercantum pada setiap ujian.", { catalogUrl: "/exams", catalogLabel: "Lihat semua ujian", emptyMessage: "Belum ada ujian yang dibuka saat ini." })),
+    block("artikel", "articles", catalog("Artikel", "Tulisan terbaru", "Baca penjelasan, kutipan Arab, dan catatan pembelajaran yang melengkapi kelas-kelas di Rabbani Institute.", { catalogUrl: "https://www.rabbaniinstitute.id/artikel", catalogLabel: "Lihat semua artikel", emptyMessage: "Belum ada artikel yang terbit saat ini." })),
+    block("mulai", "cta", { label: "Mulai perjalanan Anda", title: "Siap memperdalam pemahaman Al-Qur'an dan Bahasa Arab?", description: "Mulai perjalanan belajar Anda dengan kelas yang sesuai dengan kebutuhan dan tingkat pemahaman Anda.", variant: "default", buttons: [{ label: "Pilih kelas", href: "https://madrasah.rabbaniinstitute.id/kelas" }, { label: "Hubungi kami", href: "/kontak" }] }),
   ],
 };
 

@@ -28,3 +28,12 @@ export const ArabicBlock = Node.create({
   },
   addKeyboardShortcuts() { return { "Mod-Enter": () => this.editor.commands.exitArabicBlock() }; },
 });
+
+export const QuranBlock = Node.create({
+  name: "quranBlock",
+  group: "block",
+  content: "block+",
+  defining: true,
+  parseHTML() { return [{ tag: "div[data-quran-block]" }, { tag: "blockquote[data-quran-block]" }]; },
+  renderHTML() { return ["div", { "data-quran-block": "", class: "writing-quran-block", dir: "rtl", lang: "ar" }, 0]; },
+});

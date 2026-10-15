@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { cache } from "react";
 import { createServerClient } from "@supabase/ssr";
 import { getSupabaseEnv } from "@/lib/supabase/config";
 import { getSupabaseCookieOptions } from "@/lib/supabase/cookies";
@@ -26,7 +27,9 @@ export async function createSupabaseServerClient() {
   });
 }
 
-export async function getCurrentUser() {
+// Share identity only within this server render. Middleware and later requests
+// still validate their own session; authorization remains at each call site.
+export const getCurrentUser = cache(async function getCurrentUser() {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -43,4 +46,4 @@ export async function getCurrentUser() {
     .maybeSingle();
 
   return { user, profile };
-}
+});

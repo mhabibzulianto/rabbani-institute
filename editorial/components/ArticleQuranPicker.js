@@ -1,12 +1,12 @@
 "use client";
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { closeHistory } from "@tiptap/pm/history";
 import chapters from "@/lib/quran-chapters.json";
 import { quranSelection, validateQuranRange } from "@/lib/quran-selection.mjs";
+import { quranChapterName } from "@/lib/quran-chapter-names.mjs";
 import "./article-quran-picker.css";
 
-const ArticleQuranPicker = forwardRef(function ArticleQuranPicker({ editor, disabled }, ref) {
-  const [open, setOpen] = useState(false);
+export default function ArticleQuranPicker({ editor, disabled, open, onClose, bookmarkRef }) {
   const [query, setQuery] = useState("");
   const [chapterId, setChapterId] = useState(1);
   const [from, setFrom] = useState("1");
@@ -19,26 +19,15 @@ const ArticleQuranPicker = forwardRef(function ArticleQuranPicker({ editor, disa
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const dialogRef = useRef(null);
-  const bookmarkRef = useRef(null);
   const controllerRef = useRef(null);
   const generationRef = useRef(0);
   const chapter = chapters.find(item => item.id === chapterId);
-  const filtered = chapters.filter(item => (item.id + " " + item.name + " " + item.arabic).toLowerCase().includes(query.trim().toLowerCase()));
+  const filtered = chapters.filter(item => (item.id + " " + item.name + " " + quranChapterName(item) + " " + item.arabic).toLowerCase().includes(query.trim().toLowerCase()));
   let selection = null;
   try { if (verses.length) selection = quranSelection(chapter, verses, partial, startWord, endWord); } catch { /* Incomplete choices disable insertion. */ }
-  useImperativeHandle(ref, () => ({ open: () => {
-    if (!editor || disabled) return;
-    bookmarkRef.current = editor.state.selection.getBookmark();
-    setOpen(true); setError("");
-  } }));
-  useEffect(() => {
-    if (!editor) return;
-    const map = ({ transaction }) => { if (transaction.docChanged && bookmarkRef.current) bookmarkRef.current = bookmarkRef.current.map(transaction.mapping); };
-    editor.on("transaction", map);
-    return () => editor.off("transaction", map);
-  }, [editor]);
   useEffect(() => {
     if (!open) return;
+    setError("");
     const dialog = dialogRef.current;
     dialog.showModal();
     return () => { controllerRef.current?.abort(); if (dialog.open) dialog.close(); };
@@ -49,7 +38,7 @@ const ArticleQuranPicker = forwardRef(function ArticleQuranPicker({ editor, disa
   }
   function close() {
     controllerRef.current?.abort(); generationRef.current++; setBusy(false);
-    dialogRef.current?.close(); setOpen(false);
+    dialogRef.current?.close(); onClose();
     if (editor && !editor.isDestroyed && bookmarkRef.current) {
       const saved = bookmarkRef.current.resolve(editor.state.doc);
       editor.chain().focus().setTextSelection({ from: saved.from, to: saved.to }).run();
@@ -92,15 +81,15 @@ const ArticleQuranPicker = forwardRef(function ArticleQuranPicker({ editor, disa
     const inserted = editor.chain().focus().setTextSelection({ from: saved.from, to: saved.to }).insertContent(selection.content).run();
     if (!inserted) { setError("Ayat belum dapat disisipkan di posisi ini. Pilih paragraf biasa lalu coba lagi."); return; }
     editor.view.dispatch(closeHistory(editor.state.tr));
-    bookmarkRef.current = null; dialogRef.current?.close(); setOpen(false); editor.commands.focus();
+    bookmarkRef.current = null; dialogRef.current?.close(); onClose(); editor.commands.focus();
   }
   return open ? <dialog ref={dialogRef} className="writing-quran-dialog" aria-labelledby="quran-picker-title" onCancel={event => { event.preventDefault(); close(); }}>
     <header><div><h2 id="quran-picker-title">Sisipkan ayat</h2><p>Teks Arab tanpa terjemahan</p></div><button type="button" aria-label="Tutup pilihan ayat" onClick={close}>×</button></header>
     <div className="writing-quran-body">
       <label>Cari surat<input autoFocus value={query} onChange={event => setQuery(event.target.value)} placeholder="Nama atau nomor surat…" /></label>
       <label>Surat<select aria-label="Surat" value={chapterId} onChange={event => { invalidate(); setChapterId(Number(event.target.value)); setFrom("1"); setTo("1"); }}>
-        {!filtered.some(item => item.id === chapterId) && <option value={chapterId}>{chapter.id}. {chapter.name} — {chapter.verses} ayat</option>}
-        {filtered.map(item => <option key={item.id} value={item.id}>{item.id}. {item.name} — {item.verses} ayat</option>)}
+        {!filtered.some(item => item.id === chapterId) && <option value={chapterId}>{chapter.id}. {quranChapterName(chapter)} — {chapter.verses} ayat</option>}
+        {filtered.map(item => <option key={item.id} value={item.id}>{item.id}. {quranChapterName(item)} — {item.verses} ayat</option>)}
       </select></label>
       {!filtered.length && <p role="status">Surat tidak ditemukan.</p>}
       <div className="writing-quran-range"><label>Ayat awal<input type="number" min="1" max={chapter.verses} value={from} onChange={event => { invalidate(); setFrom(event.target.value); setTo(event.target.value); }} /></label><label>Ayat akhir<input type="number" min={Number(from) || 1} max={chapter.verses} value={to} onChange={event => { invalidate(); setTo(event.target.value); }} /></label><button type="button" className="secondary-button" disabled={busy} onClick={load}>{busy ? "Memuat…" : "Tampilkan ayat"}</button></div>
@@ -124,5 +113,4 @@ const ArticleQuranPicker = forwardRef(function ArticleQuranPicker({ editor, disa
     </div>
     <footer><button type="button" className="secondary-button" onClick={close}>Batal</button><button type="button" className="writing-publish" disabled={!selection || busy || disabled} onClick={insert}>Sisipkan ayat</button></footer>
   </dialog> : null;
-});
-export default ArticleQuranPicker;
+}

@@ -1,6 +1,7 @@
 import { formatHarvardCitation } from "@/lib/article-citations";
 import { getArticleDocument } from "@/lib/gutenberg-content";
 import { footnoteLinks } from "../packages/article-footnotes/index.mjs";
+import { youtubeEmbedUrl } from "../packages/article-youtube/index.mjs";
 
 export default function ArticleRenderer({ contentRaw, blocks }) {
   const document = getArticleDocument(contentRaw || blocks);
@@ -75,6 +76,10 @@ function PlateNodeRenderer({ footnoteIds, footnotes, node }) {
       return <h4>{children}</h4>;
     case "blockquote":
       return <blockquote className="article-quote-block">{children}</blockquote>;
+    case "pull-quote":
+      return <blockquote className="article-pull-quote">{children}</blockquote>;
+    case "marginalia":
+      return <aside className="article-marginalia">{children}</aside>;
     case "ayah-quote":
       return <blockquote className="article-quran-block">{children}</blockquote>;
     case "arabic-text":
@@ -114,6 +119,10 @@ function PlateNodeRenderer({ footnoteIds, footnotes, node }) {
           {node.caption || node.filename ? <figcaption>{node.caption || node.filename}</figcaption> : null}
         </figure>
       );
+    case "youtube": {
+      const src = youtubeEmbedUrl(node.src);
+      return src ? <figure className="article-youtube-block"><iframe src={src} title="Video YouTube" loading="lazy" allow="encrypted-media; picture-in-picture; fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" /></figure> : null;
+    }
     case "video":
       return (
         <figure className="article-media-block">

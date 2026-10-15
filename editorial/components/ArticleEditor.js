@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useEditor, EditorContent } from "@tiptap/react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -9,15 +10,27 @@ import { articleEditorExtensions } from "@/lib/tiptap-extensions.mjs";
 import { safeEditorLink } from "@/lib/editor-links.mjs";
 import { saveEditorialArticle, saveNewEditorialArticle, publishEditorialArticle } from "@/lib/editor-actions";
 import { ARTICLE_STATUSES } from "@/lib/article-list.mjs";
-import MediaPanel from "@/components/MediaPanel";
 import { createEditorialCategory } from "@/lib/media-actions";
 import ArticleWorkflow from "@/components/ArticleWorkflow";
-import PublicationPreview from "@/components/PublicationPreview";
 import { previewEditorialDraft } from "@/lib/workflow-actions";
 import EditorPolish from "@/components/EditorPolish";
-import ArticleQuranPicker from "@/components/ArticleQuranPicker";
 import ArticleFootnotes from "@/components/ArticleFootnotes";
 import { EditorPolish as PolishExtension } from "@/lib/editor-polish-extension.mjs";
+import TagInput from "@/components/TagInput";
+import ScrollableToolbar from "@/components/ScrollableToolbar";
+import { HONORIFIC_GROUPS, HONORIFICS } from "@/lib/tiptap-honorifics.mjs";
+import { SaveIcon } from "lucide-react";
+import { youtubeEmbedUrl } from "../../packages/article-youtube/index.mjs";
+
+const MediaPanel = dynamic(() => import("@/components/MediaPanel"), {
+  loading: () => <p role="status">Menyiapkan pemilih media…</p>,
+});
+const ArticleQuranPicker = dynamic(() => import("@/components/ArticleQuranPicker"), {
+  loading: () => <p role="status">Menyiapkan pemilih ayat…</p>,
+});
+const PublicationPreview = dynamic(() => import("@/components/PublicationPreview"), {
+  loading: () => <p className="publication-empty" role="status">Menyiapkan preview…</p>,
+});
 
 function Tool({ label, icon: Icon, children, active, disabled, onClick }) {
   return <button type="button" title={label} aria-label={label} aria-pressed={active == null ? undefined : active} disabled={disabled} className={`writing-tool${active ? " is-active" : ""}`} onMouseDown={(event) => event.preventDefault()} onClick={onClick}>{Icon ? <Icon aria-hidden="true" /> : children}</button>;
@@ -61,11 +74,18 @@ export default function ArticleEditor({ article, initialContent, unsupportedHtml
   const saveFnRef = useRef(null);
   const titleRef = useRef(null);
   const linkDialogRef = useRef(null);
+  const youtubeDialogRef = useRef(null);
+  const youtubeBookmarkRef = useRef(null);
+  const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [youtubeError, setYoutubeError] = useState("");
   const publishDialogRef = useRef(null);
   const mountedRef = useRef(true);
   const recoveryCheckedRef = useRef(false);
   const footnotesRef = useRef(null);
-  const quranRef = useRef(null);
+  const [quranRequested, setQuranRequested] = useState(false);
+  const [quranOpen, setQuranOpen] = useState(false);
+  const quranBookmarkRef = useRef(null);
+  const workspaceRef = useRef(null);
   const backupKey = `editorial-draft:${userId}:${articleId || "new"}`;
   const editable = canEdit && (admin || ["draft", "rejected"].includes(status));
 
@@ -96,6 +116,15 @@ export default function ArticleEditor({ article, initialContent, unsupportedHtml
 
   useEffect(() => { editor?.setEditable(editable && !publishing, false); }, [editor, editable, publishing]);
   useEffect(() => {
+    if (!editor) return;
+    // Preserve the insertion point even while the first lazy chunk is loading.
+    const mapBookmark = ({ transaction }) => {
+      if (transaction.docChanged && quranBookmarkRef.current) quranBookmarkRef.current = quranBookmarkRef.current.map(transaction.mapping);
+    };
+    editor.on("transaction", mapBookmark);
+    return () => editor.off("transaction", mapBookmark);
+  }, [editor]);
+  useEffect(() => {
     function resizeTitle() {
       if (titleRef.current) { titleRef.current.style.height = "auto"; titleRef.current.style.height = `${titleRef.current.scrollHeight}px`; }
     }
@@ -111,6 +140,23 @@ export default function ArticleEditor({ article, initialContent, unsupportedHtml
   useEffect(() => {
     mountedRef.current = true;
     return () => { mountedRef.current = false; };
+  }, []);
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    function alignFooterToKeyboard() {
+      const inset = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
+      workspaceRef.current?.style.setProperty("--writing-keyboard-inset", inset > 48 ? `${inset}px` : "0px");
+    }
+    alignFooterToKeyboard();
+    viewport.addEventListener("resize", alignFooterToKeyboard);
+    viewport.addEventListener("scroll", alignFooterToKeyboard);
+    window.addEventListener("resize", alignFooterToKeyboard);
+    return () => {
+      viewport.removeEventListener("resize", alignFooterToKeyboard);
+      viewport.removeEventListener("scroll", alignFooterToKeyboard);
+      window.removeEventListener("resize", alignFooterToKeyboard);
+    };
   }, []);
   useEffect(() => {
     if (recoveryCheckedRef.current) return;
@@ -194,6 +240,30 @@ export default function ArticleEditor({ article, initialContent, unsupportedHtml
     setMediaSession({ target, from: editor?.state.selection.from, to: editor?.state.selection.to, initialAsset: target === "body" && attrs ? { ...attrs, kind: type, url: attrs.src } : null });
     mediaDialogRef.current.showModal();
   }
+  function openQuran() {
+    if (!editor || editor.isDestroyed || !editable || publishing) return;
+    quranBookmarkRef.current = editor.state.selection.getBookmark();
+    setQuranRequested(true);
+    setQuranOpen(true);
+  }
+  function openYoutube() {
+    if (!editor || editor.isDestroyed || !editable || publishing) return;
+    youtubeBookmarkRef.current = editor.state.selection.getBookmark();
+    setYoutubeUrl(editor.isActive("youtube") ? editor.getAttributes("youtube").src : "");
+    setYoutubeError("");
+    youtubeDialogRef.current.showModal();
+    youtubeDialogRef.current.querySelector("input").focus();
+  }
+  function insertYoutube(event) {
+    event.preventDefault();
+    const src = youtubeEmbedUrl(youtubeUrl);
+    if (!src) { setYoutubeError("Masukkan link video YouTube yang valid, misalnya youtube.com/watch?v=… atau youtu.be/…."); return; }
+    if (!editor || editor.isDestroyed || !editable || publishing || !youtubeBookmarkRef.current) return;
+    const selection = youtubeBookmarkRef.current.resolve(editor.state.doc);
+    if (!editor.chain().focus().insertContentAt({ from: selection.from, to: selection.to }, { type: "youtube", attrs: { src } }).run()) { setYoutubeError("Video belum dapat disisipkan di posisi ini. Pilih paragraf biasa, lalu coba lagi."); return; }
+    youtubeDialogRef.current.close();
+    youtubeBookmarkRef.current = null;
+  }
   function chooseMedia(asset) {
     if (mediaSession.target === "cover") fieldChanged("cover", asset.url);
     else editor.chain().focus().insertContentAt({ from: mediaSession.from, to: mediaSession.to }, { type: asset.kind, attrs: { src: asset.url, alt: asset.alt || "", caption: asset.caption || "", filename: asset.name || asset.filename || "" } }).run();
@@ -253,14 +323,14 @@ export default function ArticleEditor({ article, initialContent, unsupportedHtml
   const disabled = !editor || !editable || publishing;
   const saveLabel = { saved: "Tersimpan", dirty: "Perubahan belum tersimpan", saving: "Menyimpan…", error: "Belum tersimpan", local: "Pratinjau lokal" }[saveState];
 
-  return <div className="writing-workspace">
+  return <div className="writing-workspace" ref={workspaceRef}>
     <header className="writing-header">
       <Link href="/artikel" onClick={leave} className="writing-back"><ArrowLeftIcon aria-hidden="true" /><span>Dashboard</span></Link>
       <div className="writing-brand"><span className="writing-brand-mark">R</span><span>Rabbani<span className="writing-brand-sub"> Editorial</span></span></div>
-      <div className="writing-header-actions"><button type="button" className="writing-preview-button" disabled={!editor} onClick={openPreview}>Preview</button><button type="button" className="writing-publish" disabled={!canPublish} onClick={() => publishDialogRef.current.showModal()}>{status === "published" ? "Published" : publishing ? "Memproses…" : "Publish"}</button></div>
+      <div className="writing-header-actions"><button type="button" className="writing-preview-button" disabled={!editor} onClick={openPreview}>Preview</button><button type="button" className="writing-header-save" aria-label="Simpan artikel" title={saveLabel} disabled={!editable || !schemaReady || publishing || saveState === "saving" || saveState === "saved"} onClick={() => saveNow()}><SaveIcon aria-hidden="true" /></button><button type="button" className="writing-publish" disabled={!canPublish} onClick={() => publishDialogRef.current.showModal()}>{status === "published" ? "Published" : publishing ? "Memproses…" : "Publish"}</button></div>
     </header>
     <div className="writing-toolbar">
-      <div className="writing-toolbar-tools" role="toolbar" aria-label="Pemformatan artikel" onKeyDown={(event) => {
+      <ScrollableToolbar onKeyDown={(event) => {
         if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key) || event.target.tagName === "SELECT") return;
         const tools = Array.from(event.currentTarget.querySelectorAll("button:not(:disabled), select:not(:disabled)"));
         const index = tools.indexOf(document.activeElement);
@@ -268,16 +338,28 @@ export default function ArticleEditor({ article, initialContent, unsupportedHtml
         event.preventDefault();
         tools[event.key === "Home" ? 0 : event.key === "End" ? tools.length-1 : (index + (event.key === "ArrowRight" ? 1 : -1) + tools.length) % tools.length]?.focus();
       }}>
-        <select aria-label="Jenis blok teks" disabled={disabled} value={editor?.isActive("heading") ? `h${editor.getAttributes("heading").level}` : "p"} onChange={(event) => { const value = event.target.value; if (value === "p") editor.chain().focus().setParagraph().run(); else editor.chain().focus().setHeading({ level: Number(value.slice(1)) }).run(); }}><option value="p">Teks biasa</option><option value="h2">Heading 1</option><option value="h3">Heading 2</option><option value="h4">Heading 3</option></select>
+        <select aria-label="Jenis blok teks" disabled={disabled} value={editor?.isActive("pullQuote") ? "pullQuote" : editor?.isActive("marginalia") ? "marginalia" : editor?.isActive("heading") ? `h${editor.getAttributes("heading").level}` : "p"} onChange={(event) => {
+          const value = event.target.value;
+          let chain = editor.chain().focus();
+          for (const wrapper of ["pullQuote", "marginalia"]) if (editor.isActive(wrapper) && wrapper !== value) chain = chain.lift(wrapper);
+          if (value === "p") chain.setParagraph().run();
+          else if (value.startsWith("h")) chain.setHeading({ level: Number(value.slice(1)) }).run();
+          else chain.setParagraph()[value === "pullQuote" ? "setPullQuote" : "setMarginalia"]().run();
+        }}><option value="p">Teks biasa</option><option value="h2">Heading 1</option><option value="h3">Heading 2</option><option value="h4">Heading 3</option><option value="pullQuote">Pull quote</option><option value="marginalia">Marginalia</option></select>
         <span className="writing-tool-divider" />
         {[["bold", "Tebal", FontBoldIcon, "toggleBold"], ["italic", "Miring", FontItalicIcon, "toggleItalic"], ["underline", "Garis bawah", UnderlineIcon, "toggleUnderline"], ["strike", "Coret", StrikethroughIcon, "toggleStrike"], ["code", "Kode inline", CodeIcon, "toggleCode"]].map(([mark, label, icon, command]) => <Tool key={mark} label={label} icon={icon} active={editor?.isActive(mark) || false} disabled={disabled} onClick={() => editor.chain().focus()[command]().run()} />)}
         <Tool label="Tautan" icon={Link2Icon} active={editor?.isActive("link") || false} disabled={disabled} onClick={openLink} />
         <Tool label="Tambah catatan kaki" disabled={disabled} onClick={() => footnotesRef.current?.openNew()}>x¹</Tool>
         <Tool label="Sisipkan atau edit media" icon={ImageIcon} disabled={disabled} onClick={() => openMedia()} />
+        <Tool label="Sisipkan atau edit video YouTube" active={editor?.isActive("youtube") || false} disabled={disabled} onClick={openYoutube}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="4" /><path d="m10 9 5 3-5 3Z" fill="currentColor" stroke="none" /></svg></Tool>
         <span className="writing-tool-divider" />
         <Tool label="Daftar bullet" icon={ListBulletIcon} active={editor?.isActive("bulletList") || false} disabled={disabled} onClick={() => editor.chain().focus().toggleBulletList().run()} />
         <Tool label="Daftar bernomor" active={editor?.isActive("orderedList") || false} disabled={disabled} onClick={() => editor.chain().focus().toggleOrderedList().run()}>1.</Tool>
-        <Tool label="Sisipkan ayat Al-Qur’an" disabled={disabled} onClick={() => quranRef.current?.open()}>۞</Tool>
+        <Tool label="Sisipkan ayat Al-Qur’an" disabled={disabled} onClick={openQuran}>۞</Tool>
+        <select aria-label="Sisipkan honorifik Arab" title="Sisipkan honorifik Arab" disabled={disabled} value="" onChange={(event) => { const item = HONORIFICS.find(({ shortcut }) => shortcut === event.target.value); if (item) editor.chain().focus().insertContent(item.text).run(); }}>
+          <option value="">Honorifik Arab…</option>
+          {HONORIFIC_GROUPS.map((group) => <optgroup key={group.label} label={group.label}>{group.items.map((item) => <option key={item.shortcut} value={item.shortcut}>{item.text} · {item.shortcut}</option>)}</optgroup>)}
+        </select>
         <Tool label="Blok teks Arab (RTL)" active={editor?.isActive("arabicBlock") || false} disabled={disabled} onClick={() => editor.chain().focus().toggleArabicBlock().run()}>ع</Tool>
         <Tool label="Kutipan" icon={QuoteIcon} active={editor?.isActive("blockquote") || false} disabled={disabled} onClick={() => editor.chain().focus().toggleBlockquote().run()} />
         <Tool label="Garis pemisah" icon={DividerHorizontalIcon} disabled={disabled} onClick={() => editor.chain().focus().setHorizontalRule().run()} />
@@ -286,12 +368,13 @@ export default function ArticleEditor({ article, initialContent, unsupportedHtml
         <span className="writing-tool-divider" />
         <Tool label="Undo" icon={ResetIcon} disabled={disabled || !editor?.can().undo()} onClick={() => editor.chain().focus().undo().run()} />
         <Tool label="Redo" disabled={disabled || !editor?.can().redo()} onClick={() => editor.chain().focus().redo().run()}><ResetIcon className="writing-redo" aria-hidden="true" /></Tool>
-      </div>
-      <div className="writing-save-actions"><span role="status" aria-live="polite">{saveLabel}</span><button type="button" className="writing-save-button" disabled={!editable || !schemaReady || publishing || saveState === "saving"} onClick={() => saveNow()}>Simpan</button><Tool label="Unduh salinan tulisan" icon={DownloadIcon} onClick={download} /></div>
+        <span className="writing-tool-divider" />
+        <Tool label="Unduh salinan tulisan" icon={DownloadIcon} onClick={download} />
+      </ScrollableToolbar>
     </div>
     <div className="writing-canvas">
       {pasteNotice && <p className="writing-notice" role="status">{pasteNotice} <button type="button" onClick={() => setPasteNotice("")}>Tutup</button></p>}
-      {!unsupportedHtml && <EditorPolish editor={editor} slash={slash} slashControls={slashControls} onMedia={openMedia} onQuran={() => quranRef.current?.open()} onLink={openLink} disabled={disabled} />}
+      {!unsupportedHtml && <EditorPolish editor={editor} slash={slash} slashControls={slashControls} onMedia={openMedia} onQuran={openQuran} onLink={openLink} disabled={disabled} />}
       {!schemaReady && <p className="writing-notice">Penyimpanan ke server belum tersedia. Anda bisa mencoba editor dan mengunduh salinan tulisan.</p>}
       {!canEdit && !unsupportedHtml && <p className="writing-notice">Artikel ini hanya dapat dibaca karena statusnya {ARTICLE_STATUSES[status]?.toLowerCase() || status}.</p>}
       {error && <p className="writing-notice writing-notice-error" role="alert">{error} <button type="button" onClick={download}>Unduh salinan</button></p>}
@@ -306,13 +389,13 @@ export default function ArticleEditor({ article, initialContent, unsupportedHtml
       <details className="writing-properties"><summary>Informasi artikel</summary><div>
         <label>Kategori<select value={fields.category} disabled={!editable || publishing} onChange={(event) => { if (event.target.value === "__new") { setCategoryTitle(""); setCategoryError(""); categoryDialogRef.current.showModal(); } else fieldChanged("category", event.target.value); }}><option value="">Belum dikategorikan</option>{categoryOptions.map((category) => <option key={category.id} value={String(category.id)}>{category.title_id}</option>)}<option value="__new">＋ Tambah kategori baru…</option></select></label>
         <label>Topik<input value={fields.topic} maxLength={200} disabled={!editable || publishing} onChange={(event) => fieldChanged("topic", event.target.value)} /></label>
-        <label>Tag<input value={fields.tags} maxLength={1000} placeholder="Pisahkan dengan koma" disabled={!editable || publishing} onChange={(event) => fieldChanged("tags", event.target.value)} /></label>
+        <label>Tag<TagInput value={fields.tags} disabled={!editable || publishing} onChange={(value) => fieldChanged("tags", value)} /></label>
       </div></details>
       {articleId && <ArticleWorkflow article={{ ...article, id: articleId }} admin={admin} status={status} ready={schemaReady && article.workflowReady} schedulerReady={article.schedulerReady} getVersion={() => versionRef.current} beforeAction={prepareWorkflow} onBusyChange={setPublishing} onChanged={(result) => { if (result.restored) { window.location.reload(); return; } versionRef.current = result.version; setStatus(result.status); updateToolbar((value) => value+1); router.refresh(); }} />}
       {unsupportedHtml != null ? <><p className="writing-notice">Artikel ini memakai blok khusus yang belum didukung editor MVP. Isi ditampilkan sebagai preview agar format aslinya tetap utuh.</p><div className="writing-prose" dangerouslySetInnerHTML={{ __html: unsupportedHtml }} /></> : editor ? <EditorContent editor={editor} /> : <p className="writing-editor-loading" role="status">Menyiapkan editor…</p>}
-      {!unsupportedHtml && <ArticleQuranPicker ref={quranRef} editor={editor} disabled={disabled} />}
+      {!unsupportedHtml && quranRequested && <ArticleQuranPicker editor={editor} disabled={disabled} open={quranOpen} onClose={() => setQuranOpen(false)} bookmarkRef={quranBookmarkRef} />}
       {!unsupportedHtml && <ArticleFootnotes ref={footnotesRef} editor={editor} disabled={disabled} />}
-      <p className="writing-hint">Ketik <kbd>/</kbd> di awal paragraf untuk memilih blok. <kbd>Ctrl/Cmd+S</kbd> untuk menyimpan. Gunakan <kbd>**teks**</kbd> untuk tebal, <kbd>##</kbd> untuk heading, atau <kbd>-</kbd> untuk daftar.</p>
+      <p className="writing-hint">Ketik <kbd>/</kbd> di awal paragraf untuk memilih blok. <kbd>Ctrl/Cmd+S</kbd> untuk menyimpan. Gunakan <kbd>**teks**</kbd> untuk tebal, <kbd>##</kbd> untuk heading, <kbd>-</kbd> untuk daftar, atau <kbd>:saw:</kbd> untuk ﷺ.</p>
     </div>
     <footer className="writing-footer"><span>{words.toLocaleString("id-ID")} kata<span className="writing-footer-dot">·</span>{characters.toLocaleString("id-ID")} karakter<span className="writing-footer-dot">·</span>{Math.max(1, Math.ceil(words / 200))} menit baca</span><span>{saveLabel}</span></footer>
     <dialog ref={previewDialogRef} className="publication-live-dialog" aria-labelledby="publication-live-title" onClose={() => { previewRequest.current++; }}><div className="publication-preview-nav"><span id="publication-live-title">Preview publik · tulisan saat ini</span><button type="button" className="writing-save-button" onClick={() => previewDialogRef.current.close()}>← Kembali menulis</button></div>{preview?.error ? <p className="publication-empty" role="alert">{preview.error}</p> : preview ? <PublicationPreview preview={preview} author={article.author} category={categoryOptions.find((item) => String(item.id) === fields.category)?.title_id} /> : <p className="publication-empty" role="status">Menyiapkan preview…</p>}</dialog>
@@ -331,6 +414,15 @@ export default function ArticleEditor({ article, initialContent, unsupportedHtml
         <label>URL<input type="text" value={linkValue} onChange={(event) => setLinkValue(event.target.value)} placeholder="https://" autoFocus /></label>
         <p>Kosongkan URL untuk menghapus tautan yang dipilih.</p>{linkError && <p role="alert">{linkError}</p>}
         <button className="writing-publish" type="submit">Terapkan</button>
+      </form>
+    </dialog>
+    <dialog ref={youtubeDialogRef} className="writing-dialog" aria-labelledby="writing-youtube-title" onClose={() => { youtubeBookmarkRef.current = null; }}>
+      <form onSubmit={insertYoutube}>
+        <div className="writing-dialog-heading"><h2 id="writing-youtube-title">Video YouTube</h2><button type="button" aria-label="Tutup YouTube" onClick={() => youtubeDialogRef.current.close()}><Cross2Icon /></button></div>
+        <label>Link video YouTube<input type="text" inputMode="url" autoComplete="off" required maxLength={2048} value={youtubeUrl} onChange={event => { setYoutubeUrl(event.target.value); setYoutubeError(""); }} placeholder="https://www.youtube.com/watch?v=… atau https://youtu.be/…" aria-invalid={Boolean(youtubeError)} aria-describedby="writing-youtube-help" /></label>
+        <p id="writing-youtube-help">Tempel link panjang atau link pendek YouTube. Link Shorts dan live juga didukung.</p>
+        {youtubeError && <p role="alert">{youtubeError}</p>}
+        <button type="submit" className="writing-publish" disabled={!editable || publishing}>Sisipkan video</button>
       </form>
     </dialog>
     <dialog ref={publishDialogRef} className="writing-dialog" aria-labelledby="writing-publish-title">

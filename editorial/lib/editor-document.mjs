@@ -3,11 +3,12 @@ import { articleEditorExtensions } from "./tiptap-extensions.mjs";
 import { getArticlePreview } from "./article-preview.mjs";
 import { safeEditorLink } from "./editor-links.mjs";
 import { safeMediaUrl } from "./media-validation.mjs";
+import { youtubeEmbedUrl } from "../../packages/article-youtube/index.mjs";
 import { FOOTNOTE_LIMIT, validFootnoteId, validFootnoteText } from "../../packages/article-footnotes/index.mjs";
 export { safeEditorLink } from "./editor-links.mjs";
 
 const schema = getSchema(articleEditorExtensions());
-const allowedNodes = new Set(["doc", "paragraph", "heading", "text", "hardBreak", "horizontalRule", "blockquote", "bulletList", "orderedList", "listItem", "image", "video", "audio", "document", "footnote", "arabicBlock"]);
+const allowedNodes = new Set(["doc", "paragraph", "heading", "text", "hardBreak", "horizontalRule", "blockquote", "bulletList", "orderedList", "listItem", "image", "video", "audio", "document", "youtube", "footnote", "arabicBlock", "quranBlock", "pullQuote", "marginalia"]);
 const allowedMarks = new Set(["bold", "italic", "underline", "strike", "code", "link"]);
 const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
 export const emptyEditorDocument = () => ({ type: "doc", content: [{ type: "paragraph" }] });
@@ -20,7 +21,8 @@ export function validateEditorDocument(doc) {
   function check(node, depth) {
     if (!node || !allowedNodes.has(node.type) || ++count > 20000 || depth > 40) throw new Error("Dokumen memuat blok yang belum didukung editor MVP.");
     const media = ["image", "video", "audio", "document"].includes(node.type);
-    const attrs = media ? ["src", "alt", "caption", "filename"] : { paragraph: ["textAlign"], heading: ["level", "textAlign"], orderedList: ["start", "type"], footnote: ["id", "text"] }[node.type] || [];
+    const attrs = media ? ["src", "alt", "caption", "filename"] : { youtube: ["src"], paragraph: ["textAlign"], heading: ["level", "textAlign"], orderedList: ["start", "type"], footnote: ["id", "text"] }[node.type] || [];
+    if (node.type === "youtube" && (!youtubeEmbedUrl(node.attrs?.src) || youtubeEmbedUrl(node.attrs.src) !== node.attrs.src || node.content?.length || node.marks?.length)) throw new Error("Tautan embed YouTube tidak valid.");
     if (node.type === "footnote") {
       if (!validFootnoteId(node.attrs?.id) || !validFootnoteText(node.attrs?.text) || footnoteIds.has(node.attrs.id) || footnoteIds.size >= FOOTNOTE_LIMIT || node.content?.length || node.marks?.length) throw new Error("Catatan kaki tidak valid, duplikat, atau melebihi batas (200 catatan, 4.000 karakter per catatan).");
       footnoteIds.add(node.attrs.id);
@@ -65,6 +67,9 @@ export function canEditArticle(profile, article, userId) {
 }
 
 function fromPlate(node) {
+  if (node.type === "youtube") return { type: "youtube", attrs: { src: youtubeEmbedUrl(node.src) || "" } };
+  if (["pull-quote", "marginalia"].includes(node.type) && Array.isArray(node.children)) return { type: node.type === "pull-quote" ? "pullQuote" : "marginalia", content: node.children.flatMap((child) => fromPlate(child) || []) };
+  if (node.type === "ayah-quote" && Array.isArray(node.children)) return { type: "quranBlock", content: node.children.flatMap((child) => fromPlate(child) || []) };
   if (node.type === "arabic-text" && Array.isArray(node.children)) return { type: "arabicBlock", content: node.children.flatMap((child) => fromPlate(child) || []) };
   if (["image", "video", "audio", "document"].includes(node.type)) return { type: node.type, attrs: { src: node.src, alt: node.alt || "", caption: node.caption || "", filename: node.filename || "" } };
   if (node.type === "hr") return { type: "horizontalRule" };
@@ -121,7 +126,7 @@ export function prepareEditorDocument(article) {
 
 export function serializeLegacyDocument(document) {
   const doc = validateEditorDocument(document);
-  const containsMedia = (node) => ["image", "video", "audio", "document", "footnote", "arabicBlock"].includes(node.type) || node.content?.some(containsMedia);
+  const containsMedia = (node) => ["image", "video", "audio", "document", "youtube", "footnote", "arabicBlock", "quranBlock", "pullQuote", "marginalia"].includes(node.type) || node.content?.some(containsMedia);
   // The public website's legacy reader understands Plate media blocks.
   if (containsMedia(doc)) {
     let footnoteNumber = 0;
@@ -136,8 +141,8 @@ export function serializeLegacyDocument(document) {
         return leaf;
       }
       if (node.type === "hardBreak") return { text: "\n" };
-      if (["image", "video", "audio", "document"].includes(node.type)) return { type: node.type, ...node.attrs, children: [{ text: "" }] };
-      const type = { arabicBlock: "arabic-text", paragraph: "p", heading: `h${node.attrs?.level - 1}`, horizontalRule: "hr", blockquote: "blockquote", bulletList: "ul", orderedList: "ol", listItem: "li" }[node.type];
+      if (["image", "video", "audio", "document", "youtube"].includes(node.type)) return { type: node.type, ...node.attrs, children: [{ text: "" }] };
+      const type = { arabicBlock: "arabic-text", quranBlock: "ayah-quote", pullQuote: "pull-quote", marginalia: "marginalia", paragraph: "p", heading: `h${node.attrs?.level - 1}`, horizontalRule: "hr", blockquote: "blockquote", bulletList: "ul", orderedList: "ol", listItem: "li" }[node.type];
       return { type, ...(node.attrs?.textAlign ? { align: node.attrs.textAlign } : {}), ...(node.type === "orderedList" ? { start: node.attrs?.start || 1 } : {}), children: node.content?.map(plate) || [{ text: "" }] };
     }
     const blocks = doc.content.map(plate);

@@ -1,40 +1,30 @@
+import { Suspense } from "react";
 import PageHeader from "@/components/PageHeader";
+import ReportCalendar from "@/components/ReportCalendar";
+import { getReportCalendar } from "@/lib/report-calendar";
+import { getEditorialArticle } from "@/lib/articles";
+import ArticlePreviewWorkspace, { ArticlePreviewLoading } from "@/components/ArticlePreviewWorkspace";
+import ArticlePreviewContent from "@/components/ArticlePreviewContent";
+import { selectedReportDay } from "@/lib/report-calendar.mjs";
 
-function StatCard({ label, value }) {
-  return (
-    <div className="stat-card">
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
-  );
+async function ReportArticlePreview({ id }) {
+  try {
+    const { article } = await getEditorialArticle(id);
+    return article ? <ArticlePreviewContent article={article} /> : <div className="article-preview-no-content"><h2>Artikel tidak tersedia</h2><p>Artikel tidak ditemukan atau Anda tidak memiliki akses.</p></div>;
+  } catch (error) {
+    if (!error.cause) throw error;
+    return <div className="article-preview-no-content"><h2>Preview belum dapat dimuat</h2><p>Tutup preview lalu coba lagi.</p></div>;
+  }
 }
-
-export default function EditorialBerandaPage() {
-  return (
-    <main className="page-shell">
-      <PageHeader
-        badge="EDITORIAL"
-        title="Beranda"
-        description="Ringkasan ruang kerja penulis dan editor. Isi dashboard ini akan didesain pada tahap berikutnya."
-      />
-
-      <section className="stats-grid editorial-stats">
-        <StatCard label="Draft aktif" value="0" />
-        <StatCard label="Artikel terjadwal" value="0" />
-        <StatCard label="Media terbaru" value="0" />
-        <StatCard label="Komentar baru" value="0" />
-      </section>
-
-      <section className="panel-grid two-up">
-        <article className="placeholder-panel editorial-placeholder">
-          <h2>Workflow editorial</h2>
-          <p>Area ini disiapkan untuk merangkum antrean artikel, review editor, dan prioritas publikasi.</p>
-        </article>
-        <article className="placeholder-panel editorial-placeholder">
-          <h2>Aktivitas pembaca</h2>
-          <p>Area ini disiapkan untuk menampilkan komentar, performa artikel, dan insight pembaca.</p>
-        </article>
-      </section>
+export default async function EditorialBerandaPage({ searchParams }) {
+  const query = await searchParams;
+  const report = await getReportCalendar(query?.month);
+  const day = selectedReportDay(query?.day, report.month, report.today);
+  const previewId = typeof query?.preview === "string" && /^[1-9]\d{0,18}$/.test(query.preview) ? query.preview : "";
+  const closeHref = "/beranda?" + new URLSearchParams({ month: report.month, day });
+  return <ArticlePreviewWorkspace previewId={previewId} closeHref={closeHref} preview={previewId ? <Suspense key={previewId} fallback={<ArticlePreviewLoading />}><ReportArticlePreview id={previewId} /></Suspense> : null}>
+    <main className="page-shell"><PageHeader badge="EDITORIAL" title="Beranda" description="Pantau publikasi, jadwal terbit, dan pengajuan artikel dalam kalender laporan." />
+      <ReportCalendar key={report.month} report={report} initialDay={day} />
     </main>
-  );
+  </ArticlePreviewWorkspace>;
 }

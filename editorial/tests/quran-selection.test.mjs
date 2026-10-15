@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { normalizeQuranVerse, quranSelection, validateQuranRange } from "../lib/quran-selection.mjs";
 import { validateEditorDocument, serializeLegacyDocument, prepareEditorDocument } from "../lib/editor-document.mjs";
 import { getArticlePreview } from "../lib/article-preview.mjs";
+import { QURAN_CHAPTER_NAMES, quranChapterName } from "../lib/quran-chapter-names.mjs";
 const fixture = key => JSON.parse(readFileSync(new URL("./fixtures/quran-" + key + ".json", import.meta.url), "utf8"));
 const chapters = JSON.parse(readFileSync(new URL("../lib/quran-chapters.json", import.meta.url), "utf8"));
 const chapter = chapters[1];
@@ -13,6 +14,8 @@ const verses = [255, 256].map(n => normalizeQuranVerse(fixture("2-" + n), 2, n))
 
 test("surah catalog and ranges validate counts, order and request bounds", () => {
   assert.equal(chapters.length, 114); assert.equal(chapters.reduce((n,c) => n+c.verses, 0), 6236);
+  assert.equal(QURAN_CHAPTER_NAMES.length, 115);
+  assert.equal(quranChapterName(chapters[5]), "al-An'ām");
   assert.deepEqual(validateQuranRange(chapter, "255", "256"), { from: 255, to: 256 });
   for (const pair of [[0, 1], [2, 1], [1, 287], [1, 21], [1.5, 2], ["", ""], [NaN, 3]]) assert.throws(() => validateQuranRange(chapter, ...pair));
 });
@@ -20,11 +23,12 @@ test("alignment retains original harakat and stop signs despite word annotations
   assert.equal(verses[0].words.length, 50);
   const full = quranSelection(chapter, verses);
   assert.equal(full.texts[0], verses[0].text + " ﴿٢٥٥﴾");
-  assert.equal(full.reference, "QS. Al-Baqarah [2]: 255–256");
+  assert.equal(full.reference, "[QS al-Baqarah: 255–256]");
+  assert.deepEqual(full.content[1].content[0].marks, undefined);
   assert.ok(!full.cropped); assert.ok(!JSON.stringify(full).includes("translation"));
   const slice = quranSelection(chapter, [verses[0]], true, 1, 7);
   assert.ok(slice.texts[0].includes("ۚ")); assert.ok(slice.texts[0].includes("…"));
-  assert.equal(slice.reference, "QS. Al-Baqarah [2]: 255 (potongan ayat)");
+  assert.equal(slice.reference, "[QS al-Baqarah: 255] (potongan ayat)");
   assert.throws(() => normalizeQuranVerse(fixture("2-255"), 2, 256));
   const bad = fixture("2-255"); bad.words[0].text_uthmani = "نص خاطئ";
   assert.throws(() => normalizeQuranVerse(bad, 2, 255));
@@ -40,11 +44,12 @@ test("partial ranges crop only the first and last verse and reject invalid bound
 test("verses and reference are editable text and round-trip through publication", () => {
   const selected = quranSelection(chapter, verses, true, 2, 10);
   const doc = validateEditorDocument({ type: "doc", content: selected.content });
-  assert.equal(doc.content[0].type, "arabicBlock");
+  assert.equal(doc.content[0].type, "quranBlock");
   assert.equal(doc.content[0].content[0].content[0].type, "text");
   doc.content[0].content[0].content[0].text += " تعديل";
   doc.content[1].content[0].text += " — مرجع";
   const legacy = serializeLegacyDocument(doc);
+  assert.equal(legacy.blocks[0].type, "ayah-quote");
   assert.deepEqual(prepareEditorDocument({ blocks: legacy.blocks }).content, doc);
   const html = getArticlePreview(legacy).html;
   assert.match(html, /dir="rtl" lang="ar"/); assert.match(html, /تعديل/); assert.match(html, /potongan ayat/);

@@ -1,3 +1,5 @@
+import { quranChapterName } from "./quran-chapter-names.mjs";
+
 export const MAX_QURAN_VERSES = 20;
 export function validateQuranRange(chapter, from, to) {
   const start = Number(from), end = Number(to);
@@ -34,10 +36,10 @@ export function quranSelection(chapter, verses, partial = false, startWord = 1, 
     const end = partial && index === verses.length - 1 ? verse.words[endWord - 1].end : verse.text.length;
     return (start > 0 ? "… " : "") + verse.text.slice(start, end).trim() + (end < verse.text.length ? " …" : "") + " ﴿" + String(verse.number).replace(/\d/g, digit => "٠١٢٣٤٥٦٧٨٩"[Number(digit)]) + "﴾";
   });
-  const reference = "QS. " + chapter.name + " [" + chapter.id + "]: " + first.number + (first.number !== last.number ? "–" + last.number : "") + (cropped ? " (potongan ayat)" : "");
+  const reference = "[QS " + quranChapterName(chapter) + ": " + first.number + (first.number !== last.number ? "–" + last.number : "") + "]" + (cropped ? " (potongan ayat)" : "");
   return { texts, reference, cropped, content: [
-    { type: "arabicBlock", content: texts.map(text => ({ type: "paragraph", content: [{ type: "text", text }] })) },
-    { type: "paragraph", attrs: { textAlign: "left" }, content: [{ type: "text", text: reference, marks: [{ type: "italic" }] }] },
+    { type: "quranBlock", content: texts.map(text => ({ type: "paragraph", content: [{ type: "text", text }] })) },
+    { type: "paragraph", attrs: { textAlign: "left" }, content: [{ type: "text", text: reference }] },
     { type: "paragraph" },
   ] };
 }

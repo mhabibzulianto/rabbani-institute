@@ -1,9 +1,12 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { Cross2Icon } from "@radix-ui/react-icons";
 import { workflowActions, REVISION_REASONS, formatPublicationTime } from "@/lib/article-workflow.mjs";
 import { reviewEditorialArticle, scheduleEditorialArticle, saveEditorialReviewNote, snapshotEditorialArticle, listArticleRevisions, previewArticleRevision, restoreArticleRevision } from "@/lib/workflow-actions";
-import PublicationPreview from "@/components/PublicationPreview";
+const PublicationPreview = dynamic(() => import("@/components/PublicationPreview"), {
+  loading: () => <p role="status">Menyiapkan preview revisi…</p>,
+});
 
 export default function ArticleWorkflow({ article, admin, status, ready, schedulerReady, getVersion, beforeAction, onChanged, onBusyChange }) {
   const [note, setNote] = useState(article.note || "");

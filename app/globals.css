@@ -743,6 +743,8 @@ body:has(.studio-shell) .floating-contact-button {
 }
 
 .article-image-shell img,
+.article-youtube-block { margin: 24px 0; width: 100%; }
+.article-youtube-block iframe { display: block; width: 100%; aspect-ratio: 16 / 9; height: auto; border: 0; border-radius: 8px; background: #171717; }
 .article-media-block video {
   width: 100%;
   max-height: 520px;
@@ -3522,6 +3524,46 @@ body:has(.article-studio-page) .floating-contact-shell {
   border-radius: 8px;
 }
 
+.article-pull-quote {
+  width: calc(100% + 112px);
+  margin: 48px -56px;
+  padding: 30px 36px;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid #cad7df;
+  border-right: 0;
+  border-left: 0;
+  font-size: clamp(1.4rem, 2.6vw, 1.9rem);
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: -0.02em;
+}
+
+.article-pull-quote p { margin: 0; }
+
+.article-marginalia {
+  width: min(260px, 42%);
+  margin: 20px -72px 28px auto;
+  padding: 4px 0 4px 16px;
+  color: var(--muted);
+  border-left: 2px solid #8cabb8;
+  font-size: 0.82rem;
+  line-height: 1.7;
+}
+
+.article-marginalia p { margin: 0; }
+
+@media (max-width: 760px) {
+  .article-pull-quote,
+  .article-marginalia {
+    width: 100%;
+    margin-inline: 0;
+  }
+
+  .article-pull-quote { padding: 22px 18px; font-size: 1.3rem; }
+  .article-marginalia { padding-left: 12px; font-size: 0.8rem; }
+}
+
 .article-plate-ayah-quote,
 .article-plate-arabic-quote,
 .article-quran-block,
@@ -3540,7 +3582,7 @@ body:has(.article-studio-page) .floating-contact-shell {
 
 .article-plate-ayah-quote,
 .article-quran-block {
-  font-family: "KFGQPC Uthman Taha HAFS", "Noto Naskh Arabic", serif;
+  font-family: "UthmanTaha", "KFGQPC Uthman Taha HAFS", "Noto Naskh Arabic", serif;
 }
 
 .article-plate-arabic-quote,
