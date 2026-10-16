@@ -15,7 +15,7 @@ export default function EditorPolish({ editor, slash, slashControls, onMedia, on
   const outline = useMemo(() => doc ? documentOutline(doc) : [], [doc]);
   const key = slash ? `${slash.from}:${slash.to}:${slash.query}` : null;
   const open = Boolean(editor && slash && !disabled && dismissed !== key);
-  const showBubble = useCallback(({ editor: instance, state }) => !disabled && !state.selection.empty && instance.isEditable && (instance.view.hasFocus() || document.activeElement?.closest(".writing-bubble")) && Boolean(state.doc.textBetween(state.selection.from, state.selection.to).trim()) && !["image", "video", "audio", "document"].some((type) => instance.isActive(type)), [disabled]);
+  const showBubble = useCallback(({ editor: instance, state }) => !window.matchMedia("(max-width: 720px), (pointer: coarse)").matches && !disabled && !state.selection.empty && instance.isEditable && (instance.view.hasFocus() || document.activeElement?.closest(".writing-bubble")) && Boolean(state.doc.textBetween(state.selection.from, state.selection.to).trim()) && !["image", "video", "audio", "document"].some((type) => instance.isActive(type)), [disabled]);
   const selected = Math.min(index, Math.max(0, items.length - 1));
   function run(item) {
     if (!item || !slash || disabled) return;

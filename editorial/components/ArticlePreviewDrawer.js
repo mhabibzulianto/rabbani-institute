@@ -1,15 +1,19 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Eye, Pencil, X } from "lucide-react";
 
 export default function ArticlePreviewDrawer({ children, onClose, articleId }) {
   const panelRef = useRef(null);
   const closeRef = useRef(null);
+  const [portalHost, setPortalHost] = useState(null);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
+  useEffect(() => { setPortalHost(document.body); }, []);
   useEffect(() => {
+    if (!portalHost) return;
     const previousFocus = document.activeElement;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -32,8 +36,9 @@ export default function ArticlePreviewDrawer({ children, onClose, articleId }) {
       document.removeEventListener("keydown", onKeyDown);
       if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
     };
-  }, []);
-  return <div className="article-preview-overlay">
+  }, [portalHost]);
+  if (!portalHost) return null;
+  return createPortal(<div className="article-preview-overlay">
     <button type="button" onClick={onClose} className="article-preview-backdrop" aria-label="Tutup preview di luar panel" tabIndex={-1} />
     <section className="article-preview-drawer" ref={panelRef} role="dialog" aria-modal="true" aria-label="Preview artikel">
       <header className="article-preview-toolbar">
@@ -48,5 +53,5 @@ export default function ArticlePreviewDrawer({ children, onClose, articleId }) {
       </header>
       <div className="article-preview-drawer-content">{children}</div>
     </section>
-  </div>;
+  </div>, portalHost);
 }

@@ -86,6 +86,7 @@ export default function ArticleEditor({ article, initialContent, unsupportedHtml
   const [quranOpen, setQuranOpen] = useState(false);
   const quranBookmarkRef = useRef(null);
   const workspaceRef = useRef(null);
+  const footerRef = useRef(null);
   const backupKey = `editorial-draft:${userId}:${articleId || "new"}`;
   const editable = canEdit && (admin || ["draft", "rejected"].includes(status));
 
@@ -143,19 +144,26 @@ export default function ArticleEditor({ article, initialContent, unsupportedHtml
   }, []);
   useEffect(() => {
     const viewport = window.visualViewport;
-    if (!viewport) return;
     function alignFooterToKeyboard() {
-      const inset = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
-      workspaceRef.current?.style.setProperty("--writing-keyboard-inset", inset > 48 ? `${inset}px` : "0px");
+      // Fixed elements use the layout viewport; the keyboard only resizes/pans
+      // the visual viewport on Android and iOS. Lift the bars to its bottom.
+      const inset = viewport && viewport.scale === 1 ? Math.max(0, document.documentElement.clientHeight - viewport.height - viewport.offsetTop) : 0;
+      workspaceRef.current?.style.setProperty("--writing-keyboard-inset", `${inset}px`);
+      workspaceRef.current?.style.setProperty("--writing-footer-height", `${footerRef.current?.getBoundingClientRect().height || 36}px`);
     }
     alignFooterToKeyboard();
-    viewport.addEventListener("resize", alignFooterToKeyboard);
-    viewport.addEventListener("scroll", alignFooterToKeyboard);
+    const observer = new ResizeObserver(alignFooterToKeyboard);
+    if (footerRef.current) observer.observe(footerRef.current);
+    viewport?.addEventListener("resize", alignFooterToKeyboard);
+    viewport?.addEventListener("scroll", alignFooterToKeyboard);
     window.addEventListener("resize", alignFooterToKeyboard);
+    window.addEventListener("pageshow", alignFooterToKeyboard);
     return () => {
-      viewport.removeEventListener("resize", alignFooterToKeyboard);
-      viewport.removeEventListener("scroll", alignFooterToKeyboard);
+      observer.disconnect();
+      viewport?.removeEventListener("resize", alignFooterToKeyboard);
+      viewport?.removeEventListener("scroll", alignFooterToKeyboard);
       window.removeEventListener("resize", alignFooterToKeyboard);
+      window.removeEventListener("pageshow", alignFooterToKeyboard);
     };
   }, []);
   useEffect(() => {
@@ -325,7 +333,7 @@ export default function ArticleEditor({ article, initialContent, unsupportedHtml
 
   return <div className="writing-workspace" ref={workspaceRef}>
     <header className="writing-header">
-      <Link href="/artikel" onClick={leave} className="writing-back"><ArrowLeftIcon aria-hidden="true" /><span>Dashboard</span></Link>
+      <Link href="/artikel" onClick={leave} className="writing-back" aria-label="Dashboard"><ArrowLeftIcon aria-hidden="true" /><span>Dashboard</span></Link>
       <div className="writing-brand"><span className="writing-brand-mark">R</span><span>Rabbani<span className="writing-brand-sub"> Editorial</span></span></div>
       <div className="writing-header-actions"><button type="button" className="writing-preview-button" disabled={!editor} onClick={openPreview}>Preview</button><button type="button" className="writing-header-save" aria-label="Simpan artikel" title={saveLabel} disabled={!editable || !schemaReady || publishing || saveState === "saving" || saveState === "saved"} onClick={() => saveNow()}><SaveIcon aria-hidden="true" /></button><button type="button" className="writing-publish" disabled={!canPublish} onClick={() => publishDialogRef.current.showModal()}>{status === "published" ? "Published" : publishing ? "Memproses…" : "Publish"}</button></div>
     </header>
@@ -397,7 +405,7 @@ export default function ArticleEditor({ article, initialContent, unsupportedHtml
       {!unsupportedHtml && <ArticleFootnotes ref={footnotesRef} editor={editor} disabled={disabled} />}
       <p className="writing-hint">Ketik <kbd>/</kbd> di awal paragraf untuk memilih blok. <kbd>Ctrl/Cmd+S</kbd> untuk menyimpan. Gunakan <kbd>**teks**</kbd> untuk tebal, <kbd>##</kbd> untuk heading, <kbd>-</kbd> untuk daftar, atau <kbd>:saw:</kbd> untuk ﷺ.</p>
     </div>
-    <footer className="writing-footer"><span>{words.toLocaleString("id-ID")} kata<span className="writing-footer-dot">·</span>{characters.toLocaleString("id-ID")} karakter<span className="writing-footer-dot">·</span>{Math.max(1, Math.ceil(words / 200))} menit baca</span><span>{saveLabel}</span></footer>
+    <footer ref={footerRef} className="writing-footer"><span>{words.toLocaleString("id-ID")} kata<span className="writing-footer-dot">·</span>{characters.toLocaleString("id-ID")} karakter<span className="writing-footer-dot">·</span>{Math.max(1, Math.ceil(words / 200))} menit baca</span><span>{saveLabel}</span></footer>
     <dialog ref={previewDialogRef} className="publication-live-dialog" aria-labelledby="publication-live-title" onClose={() => { previewRequest.current++; }}><div className="publication-preview-nav"><span id="publication-live-title">Preview publik · tulisan saat ini</span><button type="button" className="writing-save-button" onClick={() => previewDialogRef.current.close()}>← Kembali menulis</button></div>{preview?.error ? <p className="publication-empty" role="alert">{preview.error}</p> : preview ? <PublicationPreview preview={preview} author={article.author} category={categoryOptions.find((item) => String(item.id) === fields.category)?.title_id} /> : <p className="publication-empty" role="status">Menyiapkan preview…</p>}</dialog>
     <dialog ref={mediaDialogRef} className="writing-dialog media-dialog" aria-labelledby="writing-media-title" onCancel={(event) => { if (mediaBusy) event.preventDefault(); else setMediaSession(null); }}>
       <div className="writing-dialog-heading"><h2 id="writing-media-title">{mediaSession?.target === "cover" ? "Pilih cover artikel" : "Media artikel"}</h2><button type="button" aria-label="Tutup media" disabled={mediaBusy} onClick={() => { mediaDialogRef.current.close(); setMediaSession(null); }}><Cross2Icon /></button></div>

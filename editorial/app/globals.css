@@ -748,7 +748,7 @@ p.page-badge {
 
 @media (max-width: 1080px) {
   .app-shell {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .sidebar {
@@ -1031,13 +1031,13 @@ p.page-badge {
 }
 
 /* Article workspace uses the dashboard's existing palette and controls. */
-.article-workspace { min-width: 0; }
+.article-list-background, .article-workspace { min-width: 0; max-width: 100%; }
 .article-page-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 16px 4px 8px; }
 .article-page-heading h1 { margin: 10px 0; font-size: clamp(1.8rem, 3vw, 2.5rem); line-height: 1.2; overflow-wrap: anywhere; }
 .article-page-heading .page-description { margin: 0; max-width: 66ch; }
 .article-page-heading > .primary-button { flex-shrink: 0; }
 .article-eyebrow { margin: 0; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; color: var(--muted); }
-.article-list-panel, .article-draft-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; }
+.article-list-panel, .article-draft-panel { min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; }
 .article-status-tabs { display: flex; gap: 24px; overflow-x: auto; padding: 0 24px; border-bottom: 1px solid var(--border); }
 .article-status-tabs a { padding: 22px 0 18px; border-bottom: 3px solid transparent; font-size: 0.88rem; color: var(--muted); white-space: nowrap; }
 .article-status-tabs a[aria-current="page"] { border-color: var(--primary); color: var(--primary); font-weight: 700; }
@@ -1055,7 +1055,7 @@ p.page-badge {
 .article-back-link { display: inline-flex; align-items: center; gap: 8px; width: fit-content; }
 .article-result-count { display: flex; justify-content: space-between; gap: 16px; padding: 12px 24px; background: var(--surface-muted); color: var(--muted); font-size: 0.78rem; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
 .article-result-count strong { color: var(--text); }
-.article-table-scroll { width: 100%; overflow-x: auto; }
+.article-table-scroll { position: relative; min-width: 0; width: 100%; overflow-x: auto; }
 .article-data-table { width: 100%; border-collapse: collapse; text-align: left; }
 .article-data-table th { padding: 16px 20px; font-size: 0.74rem; font-weight: 600; color: var(--muted); white-space: nowrap; border-bottom: 1px solid var(--border); }
 .article-data-table td { padding: 20px; font-size: 0.83rem; border-bottom: 1px solid var(--border); line-height: 1.5; }
@@ -1259,7 +1259,7 @@ p.page-badge {
 .writing-youtube iframe, .preview-youtube iframe { display: block; width: 100%; aspect-ratio: 16 / 9; height: auto; border: 0; border-radius: 8px; background: #171717; }
 .writing-hint { color: #a1a09c; font-size: 0.72rem; margin-top: 45px; line-height: 1.8; }
 .writing-hint kbd { font-family: "SF Mono", Consolas, monospace; font-size: 0.7rem; border: 1px solid #eaeaea; padding: 1px 4px; border-radius: 3px; }
-.writing-footer { position: fixed; inset: auto 0 0; z-index: 8; min-height: 46px; display: flex; justify-content: space-between; align-items: center; gap: 12px; border-top: 1px solid var(--writing-border); background: #fbfbfa; padding: 12px 30px max(12px, env(safe-area-inset-bottom)); font-size: 0.72rem; color: var(--writing-muted); transform: translateY(var(--writing-keyboard-inset, 0px)); }
+.writing-footer { position: fixed; inset: auto 0 var(--writing-keyboard-inset, 0px); z-index: 8; min-height: 46px; display: flex; justify-content: space-between; align-items: center; gap: 12px; border-top: 1px solid var(--writing-border); background: #fbfbfa; padding: 12px 30px max(12px, env(safe-area-inset-bottom)); font-size: 0.72rem; color: var(--writing-muted); }
 .writing-footer-dot { margin: 0 10px; color: #c2c1bd; }
 .writing-notice { background: #f7f6f3; border: 1px solid #eae8e3; border-radius: 5px; padding: 12px 15px; font-size: 0.78rem; color: #6e6b64; line-height: 1.7; margin: 0 0 26px; }
 .writing-notice button { border: 0; background: transparent; color: #2f3437; text-decoration: underline; cursor: pointer; font-size: inherit; padding: 3px 6px; }
@@ -1308,7 +1308,7 @@ p.page-badge {
   .writing-brand { font-size: 0.82rem; gap: 6px; }
   .writing-brand-mark { width: 22px; height: 22px; }
   .writing-header > .writing-publish { font-size: 0.73rem; padding: 9px 12px; }
-  .writing-toolbar { position: fixed; inset: auto 0 36px; top: auto; z-index: 9; min-height: 54px; padding: 5px 10px; display: block; transform: translateY(var(--writing-keyboard-inset, 0px)); }
+  .writing-toolbar { position: fixed; inset: auto 0 calc(var(--writing-keyboard-inset, 0px) + var(--writing-footer-height, 36px)); top: auto; z-index: 9; min-height: 54px; padding: 5px 10px; display: block; }
   .writing-toolbar-tools { padding: 0; scrollbar-width: none; }
   .writing-toolbar-tools::-webkit-scrollbar { display: none; }
   .writing-canvas { padding: 30px 22px 116px; }
@@ -1317,6 +1317,7 @@ p.page-badge {
   .writing-footer { min-height: 36px; padding: 7px 14px; font-size: 0.65rem; flex-wrap: nowrap; gap: 8px; }
   .writing-footer > span { white-space: nowrap; }
   .writing-footer-dot { margin: 0 6px; }
+  .writing-bubble { display: none; }
   .writing-properties > div { grid-template-columns: 1fr; }
 }
 .mobile-bottom-nav { display: none; }
@@ -1326,6 +1327,12 @@ p.page-badge {
 .writing-header-save { display: grid; place-items: center; width: 38px; height: 38px; padding: 0; border: 1px solid #dededb; border-radius: 5px; background: #fff; color: #555; cursor: pointer; }
 .writing-header-save svg { width: 17px; height: 17px; }
 .writing-header-save:not(:disabled):hover { background: #f3f2ef; color: #2f3437; }
+@media (max-width: 380px) {
+  .writing-header { gap: 8px; padding-inline: 12px; }
+  .writing-back span { display: none; }
+  .writing-header-actions { gap: 6px; }
+  .writing-preview-button { padding-inline: 8px; }
+}
 .writing-workflow { margin: 0 0 32px; padding: 16px 0; border-bottom: 1px solid #ececec; }
 .writing-workflow summary { color: #777; cursor: pointer; font-size: 0.82rem; }
 .writing-workflow-content { display: grid; gap: 18px; padding-top: 18px; font-size: 0.86rem; }
