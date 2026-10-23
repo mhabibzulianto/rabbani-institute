@@ -18,3 +18,9 @@ test("new drafts enforce the existing editor validation", () => {
   assert.throws(() => normalizeNewArticlePayload({ ...input, doc: { type: "doc", content: [{ type: "script" }] } }));
   assert.throws(() => normalizeNewArticlePayload({ ...input, cover: "javascript:alert(1)" }));
 });
+
+ test("serial metadata is trimmed, optional and limited to 200 characters", () => {
+  assert.equal(normalizeNewArticlePayload({ ...input, serial: "  Tadabbur  " }).serial, "Tadabbur");
+  assert.equal(normalizeNewArticlePayload({ ...input, serial: " " }).serial, null);
+  assert.throws(() => normalizeNewArticlePayload({ ...input, serial: "a".repeat(201) }));
+});

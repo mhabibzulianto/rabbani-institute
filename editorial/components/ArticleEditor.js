@@ -41,7 +41,7 @@ export default function ArticleEditor({ article, initialContent, unsupportedHtml
   const [articleId, setArticleId] = useState(article.id);
   const articleIdRef = useRef(article.id);
   const creationKeyRef = useRef(null);
-  const [fields, setFields] = useState({ title: article.title, excerpt: article.excerpt, topic: article.topic, tags: article.tags, category: article.category, cover: article.cover || "" });
+  const [fields, setFields] = useState({ title: article.title, excerpt: article.excerpt, topic: article.topic, serial: article.serial || "", tags: article.tags, category: article.category, cover: article.cover || "" });
   const [categoryOptions, setCategoryOptions] = useState(categories);
   const [categoryTitle, setCategoryTitle] = useState("");
   const [categoryError, setCategoryError] = useState("");
@@ -109,7 +109,7 @@ export default function ArticleEditor({ article, initialContent, unsupportedHtml
     editorProps: { attributes: { class: "writing-prose", role: "textbox", "aria-label": "Isi artikel", "aria-multiline": "true", spellcheck: "true" } },
     onCreate: ({ editor: instance }) => {
       latestRef.current.doc = JSON.parse(JSON.stringify(instance.getJSON()));
-      savedRef.current = JSON.stringify({ title: article.title, excerpt: article.excerpt, topic: article.topic, tags: article.tags, category: article.category, cover: article.cover || "", doc: instance.getJSON() });
+      savedRef.current = JSON.stringify({ title: article.title, excerpt: article.excerpt, topic: article.topic, serial: article.serial || "", tags: article.tags, category: article.category, cover: article.cover || "", doc: instance.getJSON() });
     },
     onUpdate: ({ editor: instance }) => { latestRef.current.doc = JSON.parse(JSON.stringify(instance.getJSON())); changed(); },
     onTransaction: ({ transaction }) => { if (transaction.docChanged || transaction.selectionSet || transaction.storedMarksSet) updateToolbar((value) => value + 1); },
@@ -386,7 +386,7 @@ export default function ArticleEditor({ article, initialContent, unsupportedHtml
       {!schemaReady && <p className="writing-notice">Penyimpanan ke server belum tersedia. Anda bisa mencoba editor dan mengunduh salinan tulisan.</p>}
       {!canEdit && !unsupportedHtml && <p className="writing-notice">Artikel ini hanya dapat dibaca karena statusnya {ARTICLE_STATUSES[status]?.toLowerCase() || status}.</p>}
       {error && <p className="writing-notice writing-notice-error" role="alert">{error} <button type="button" onClick={download}>Unduh salinan</button></p>}
-      {recovery && editable && <div className="writing-notice">Ada salinan tulisan dari sesi sebelumnya. <button type="button" onClick={() => { if (!articleIdRef.current && recovery.creationKey) creationKeyRef.current = recovery.creationKey; for (const name of ["title", "excerpt", "topic", "tags", "category", "cover"]) if (typeof recovery[name] === "string") fieldChanged(name, recovery[name]); editor.commands.setContent(recovery.doc, { emitUpdate: true }); setRecovery(null); }}>Pulihkan salinan</button><button type="button" onClick={() => { setRecovery(null); localStorage.removeItem(backupKey); }}>Abaikan</button></div>}
+      {recovery && editable && <div className="writing-notice">Ada salinan tulisan dari sesi sebelumnya. <button type="button" onClick={() => { if (!articleIdRef.current && recovery.creationKey) creationKeyRef.current = recovery.creationKey; for (const name of ["title", "excerpt", "topic", "serial", "tags", "category", "cover"]) if (typeof recovery[name] === "string") fieldChanged(name, recovery[name]); editor.commands.setContent(recovery.doc, { emitUpdate: true }); setRecovery(null); }}>Pulihkan salinan</button><button type="button" onClick={() => { setRecovery(null); localStorage.removeItem(backupKey); }}>Abaikan</button></div>}
       <div className="writing-document-label"><span>ARTIKEL</span><span>{ARTICLE_STATUSES[status] || status}</span></div>
       <div className="writing-cover">{fields.cover && <>
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -397,6 +397,7 @@ export default function ArticleEditor({ article, initialContent, unsupportedHtml
       <details className="writing-properties"><summary>Informasi artikel</summary><div>
         <label>Kategori<select value={fields.category} disabled={!editable || publishing} onChange={(event) => { if (event.target.value === "__new") { setCategoryTitle(""); setCategoryError(""); categoryDialogRef.current.showModal(); } else fieldChanged("category", event.target.value); }}><option value="">Belum dikategorikan</option>{categoryOptions.map((category) => <option key={category.id} value={String(category.id)}>{category.title_id}</option>)}<option value="__new">＋ Tambah kategori baru…</option></select></label>
         <label>Topik<input value={fields.topic} maxLength={200} disabled={!editable || publishing} onChange={(event) => fieldChanged("topic", event.target.value)} /></label>
+        <label>Serial<input value={fields.serial} maxLength={200} placeholder="Contoh: Tadabbur Al-Fatihah" disabled={!editable || publishing} onChange={(event) => fieldChanged("serial", event.target.value)} /></label>
         <label>Tag<TagInput value={fields.tags} disabled={!editable || publishing} onChange={(value) => fieldChanged("tags", value)} /></label>
       </div></details>
       {articleId && <ArticleWorkflow article={{ ...article, id: articleId }} admin={admin} status={status} ready={schemaReady && article.workflowReady} schedulerReady={article.schedulerReady} getVersion={() => versionRef.current} beforeAction={prepareWorkflow} onBusyChange={setPublishing} onChanged={(result) => { if (result.restored) { window.location.reload(); return; } versionRef.current = result.version; setStatus(result.status); updateToolbar((value) => value+1); router.refresh(); }} />}

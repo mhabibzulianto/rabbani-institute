@@ -28,7 +28,7 @@ export async function saveNewEditorialArticle(input) {
     slug = newArticleSlug(input.creationKey);
   } catch (error) { return { ok: false, code: "validation", error: error.message }; }
   const supabase = await createSupabaseServerClient();
-  const columns = "id,version,last_saved_at,status,title,excerpt,topic,tags,category_id,cover_image_url,content_json,content_schema_version";
+  const columns = "id,version,last_saved_at,status,title,excerpt,topic,serial,tags,category_id,cover_image_url,content_json,content_schema_version";
   // The unique slug makes retries of an interrupted first save idempotent.
   async function previousSave() {
     const { data, error } = await supabase.from("articles").select(columns).eq("slug", slug).eq("author_id", user.id).maybeSingle();

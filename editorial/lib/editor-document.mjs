@@ -59,7 +59,7 @@ export function normalizeEditorPayload(input) {
   const category = input.category || "";
   if (category && !validArticleId(category)) throw new Error("Kategori tidak valid.");
   if (input.cover && !safeMediaUrl(input.cover)) throw new Error("URL cover tidak valid.");
-  return { title, excerpt: text("excerpt", 500) || null, topic: text("topic", 200) || null, tags: [...new Set(tags)], category_id: category || null, ...(Object.hasOwn(input, "cover") ? { cover_image_url: input.cover || null } : {}), content_json: validateEditorDocument(input.doc), content_schema_version: 1 };
+  return { title, excerpt: text("excerpt", 500) || null, topic: text("topic", 200) || null, ...(Object.hasOwn(input, "serial") ? { serial: text("serial", 200) || null } : {}), tags: [...new Set(tags)], category_id: category || null, ...(Object.hasOwn(input, "cover") ? { cover_image_url: input.cover || null } : {}), content_json: validateEditorDocument(input.doc), content_schema_version: 1 };
 }
 
 export function canEditArticle(profile, article, userId) {
